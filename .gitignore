@@ -1,0 +1,19 @@
+# Créer un .gitignore plus complet
+cat > .gitignore << 'EOF'
+# Neovim
+nvim/plugged/
+nvim/nvim/plugged/
+nvim/.netrwhist
+nvim/spell/
+
+# Logs et cache
+*.log
+*.tmp
+*~
+.DS_Store
+
+# Fichiers de sauvegarde
+*.bak
+*.swp
+*.swo
+EOF
