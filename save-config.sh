@@ -1,5 +1,4 @@
 #!/bin/bash
-
 BACKUP_DIR="$HOME/backup_config/"
 PKG_LIST_DIR="$BACKUP_DIR/package_liste"
 mkdir -p "$BACKUP_DIR"
@@ -23,7 +22,7 @@ for ITEM in "${CONFIGS[@]}"; do
   DEST="$BACKUP_DIR/"
   ((COUNT++))
   PERCENT=$((COUNT * 100 / TOTAL))
-
+  
   if [ -f "$ITEM" ]; then
     cp "$ITEM" "$DEST"
     STATUS="OK (fichier)"
@@ -34,7 +33,7 @@ for ITEM in "${CONFIGS[@]}"; do
   else
     STATUS="NON TROUVÉ"
   fi
-
+  
   echo "[$COUNT/$TOTAL] $BASENAME : $STATUS ($PERCENT%)"
 done
 
@@ -52,3 +51,38 @@ flatpak list --app --columns=application > "$PKG_LIST_DIR/flatpak-apps.list"
 
 echo "Sauvegarde terminée dans $BACKUP_DIR"
 
+# === SECTION GIT ===
+echo "Mise à jour du dépôt Git..."
+
+# Aller dans le dossier de backup
+cd "$BACKUP_DIR" || exit 1
+
+# Vérifier si c'est un dépôt Git
+if [ ! -d ".git" ]; then
+    echo "Erreur : $BACKUP_DIR n'est pas un dépôt Git"
+    echo "Initialisez-le d'abord avec 'git init' et configurez le remote"
+    exit 1
+fi
+
+# Ajouter tous les fichiers
+git add .
+
+# Vérifier s'il y a des changements
+if git diff --cached --quiet; then
+    echo "Aucun changement détecté, pas de commit nécessaire"
+else
+    # Créer le commit avec la date
+    COMMIT_MSG="Mise à jour du backup de ma config $(date '+%d/%m/%Y')"
+    git commit -m "$COMMIT_MSG"
+    
+    # Pousser vers GitHub
+    echo "Envoi vers GitHub..."
+    if git push; then
+        echo "✓ Backup envoyé avec succès sur GitHub"
+    else
+        echo "✗ Erreur lors de l'envoi sur GitHub"
+        exit 1
+    fi
+fi
+
+echo "=== BACKUP TERMINÉ ==="
