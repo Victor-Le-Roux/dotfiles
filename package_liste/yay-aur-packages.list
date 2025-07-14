@@ -4,6 +4,7 @@ aura
 aura-debug
 brave-bin
 calibre-bin
+calibre-bin-debug
 citra
 debtap
 ffuf
@@ -30,6 +31,7 @@ python-gbinder
 rar
 rar-debug
 sddm-git
+sddm-git-debug
 spotify-tui
 thorium-browser-bin
 waydroid

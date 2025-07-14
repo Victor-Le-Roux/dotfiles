@@ -98,7 +98,6 @@ lib32-openal
 lib32-v4l-utils
 librewolf-bin
 libva-nvidia-driver-git
-libva-nvidia-driver-git-debug
 lightdm
 lightdm-gtk-greeter
 linux
