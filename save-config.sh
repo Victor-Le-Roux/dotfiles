@@ -65,35 +65,26 @@ echo -e "${GREEN}Sauvegarde terminée dans $BACKUP_DIR${NC}"
 # === SECTION GIT ===
 echo -e "${BLUE}Mise à jour du dépôt Git...${NC}"
 
-# Aller dans le dossier de backup
 cd "$BACKUP_DIR" || exit 1
 
-# Vérifier si c'est un dépôt Git
 if [ ! -d ".git" ]; then
     echo -e "${RED}Erreur : $BACKUP_DIR n'est pas un dépôt Git${NC}"
-    echo -e "${YELLOW}Initialisez-le d'abord avec 'git init' et configurez le remote${NC}"
     exit 1
 fi
 
-# Ajouter tous les fichiers
 git add .
 
-# Vérifier s'il y a des changements
 if git diff --cached --quiet; then
-    echo -e "${YELLOW}Aucun changement détecté, pas de commit nécessaire${NC}"
+    echo -e "${YELLOW}Aucun changement détecté${NC}"
 else
-    # Créer le commit avec la date
-    COMMIT_MSG="Mise à jour du backup de ma config $(date '+%d/%m/%Y')"
-    git commit -m "$COMMIT_MSG"
-    
-    # Pousser vers GitHub
-    echo -e "${BLUE}Envoi vers GitHub...${NC}"
-    if git push; then
-        echo -e "${GREEN}✓ Backup envoyé avec succès sur GitHub${NC}"
-    else
-        echo -e "${RED}✗ Erreur lors de l'envoi sur GitHub${NC}"
-        exit 1
-    fi
+    git commit -m "Mise à jour du backup de ma config $(date '+%d/%m/%Y')"
+
+    # === SSH AUTOMATIQUE POUR PUSH ===
+    eval "$(ssh-agent -s)" > /dev/null
+    ssh-add ~/.ssh/id_ed25519
+    git push
+    ssh-agent -k > /dev/null
 fi
+
 
 echo -e "${WHITE}=== ${GREEN}BACKUP TERMINÉ${WHITE} ===${NC}"
