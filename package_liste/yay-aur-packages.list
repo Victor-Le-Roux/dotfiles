@@ -4,7 +4,6 @@ aura
 aura-debug
 brave-bin
 calibre-bin
-calibre-bin-debug
 citra
 debtap
 ffuf
@@ -16,7 +15,6 @@ libgbinder
 libglibutil
 librewolf-bin
 libva-nvidia-driver-git
-libva-nvidia-driver-git-debug
 markdown-reader
 markdown-reader-debug
 melonds
@@ -29,9 +27,7 @@ pokemon-colorscripts-git
 postman-bin
 python-gbinder
 rar
-rar-debug
 sddm-git
-sddm-git-debug
 spotify-tui
 thorium-browser-bin
 waydroid
