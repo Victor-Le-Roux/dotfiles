@@ -231,6 +231,7 @@ wlogout-debug
 wlsunset
 wpscan
 wrk
+wtype
 xbindkeys
 xclip
 xdelta3
@@ -286,6 +287,7 @@ yad
 yasm
 yay
 yay-debug
+ydotool
 yt-dlp
 zen-browser-bin
 zip
