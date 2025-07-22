@@ -1,6 +1,7 @@
 7zip
 alacritty
 alsa-plugins
+android-tools
 arandr
 arch-audit
 archey4
@@ -180,6 +181,7 @@ rofi
 ruby
 ruby-bundler
 rustup
+scrcpy
 screenkey
 sddm-git
 shellcheck
