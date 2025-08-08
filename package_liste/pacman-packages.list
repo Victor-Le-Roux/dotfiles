@@ -98,6 +98,7 @@ lib32-nvidia-utils
 lib32-openal
 lib32-v4l-utils
 libva-nvidia-driver-git
+light
 lightdm
 lightdm-gtk-greeter
 linux

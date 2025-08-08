@@ -14,6 +14,8 @@ kanata
 libgbinder
 libglibutil
 libva-nvidia-driver-git
+light
+light-debug
 markdown-reader
 markdown-reader-debug
 marktext-bin
