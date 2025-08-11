@@ -236,32 +236,17 @@ if [ "$BACKUP_PACMAN" = true ]; then
   fi
 fi
 
-# Update pacman mirrors to the fastest nearby 🌐
-task_header "Updating pacman mirrors 🌐"
-echo -e "${CYAN}ℹ️ Selecting fastest HTTPS mirrors near Normandy (FR + pays voisins)${NC}"
+MIRROR_BASE="reflector --country FR,BE,NL,DE,LU,GB --protocol https --age 12 --completion-percent 100 --ipv4"
+MIRROR_EXC="--exclude bjg.at --exclude hadiko.de --exclude soulharsh007.dev"
 
-if ! command -v reflector &>/dev/null; then
-  echo -e "${RED}⚠️ reflector is not installed. Skipping mirror update.${NC}"
-  echo -e "${YELLOW}Install reflector with: sudo pacman -S reflector${NC}"
+REFLECTOR_FAST="$MIRROR_BASE $MIRROR_EXC --download-timeout 20 --connection-timeout 7 --fastest 15 --save /etc/pacman.d/mirrorlist"
+REFLECTOR_SAFE="$MIRROR_BASE $MIRROR_EXC --sort score --number 15 --save /etc/pacman.d/mirrorlist"
+
+if confirm_action "Do you want to refresh mirrors with the fastest nearby ones?"; then
+  run_command "$REFLECTOR_FAST" || run_command "$REFLECTOR_SAFE"
+  run_command "pacman -Syy"
 else
-  # Pays proches = souvent les plus rapides depuis la Normandie
-  MIRROR_COUNTRIES="FR,BE,NL,DE,LU,GB"
-  # Nombre de miroirs conservés
-  MIRROR_NUMBER=15
-  # Préfère IPv4 si IPv6 est capricieux chez toi; retire --ipv4 si tout va bien en IPv6
-  REFLECTOR_CMD="reflector --country $MIRROR_COUNTRIES \
-    --protocol https --age 12 --completion-percent 100 \
-    --ipv4 --fastest $MIRROR_NUMBER \
-    --save /etc/pacman.d/mirrorlist"
-
-  if confirm_action "Do you want to refresh mirrors with the fastest nearby ones?"; then
-    run_command "$REFLECTOR_CMD"
-    # Force un refresh des bases après mise à jour des mirrors
-    run_command "pacman -Syy"
-    echo -e "${GREEN}✅ Mirrors updated to fastest nearby${NC}"
-  else
-    echo -e "${YELLOW}⏩ Skipping mirror update${NC}"
-  fi
+  echo -e "${YELLOW}⏩ Skipping mirror update${NC}"
 fi
 
 # Full system update (including AUR packages when using yay)
