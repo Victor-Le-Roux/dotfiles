@@ -60,6 +60,7 @@ gcc13-libs
 gdb
 gimp
 git
+glew
 glfw
 glow
 gnome-keyring

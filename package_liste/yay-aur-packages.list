@@ -4,7 +4,6 @@ aura
 aura-debug
 brave-bin
 calibre-bin
-calibre-bin-debug
 citra
 debtap
 ffuf
@@ -16,7 +15,6 @@ libgbinder
 libglibutil
 libva-nvidia-driver-git
 light
-light-debug
 markdown-reader
 markdown-reader-debug
 marktext-bin
