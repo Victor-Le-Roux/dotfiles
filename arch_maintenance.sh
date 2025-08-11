@@ -236,26 +236,29 @@ if [ "$BACKUP_PACMAN" = true ]; then
   fi
 fi
 
-# Update pacman mirrors to get fastest mirrors
+# Update pacman mirrors to the fastest nearby 🌐
 task_header "Updating pacman mirrors 🌐"
-echo -e "${CYAN}ℹ️ This updates mirror list for faster downloads${NC}"
+echo -e "${CYAN}ℹ️ Selecting fastest HTTPS mirrors near Normandy (FR + pays voisins)${NC}"
 
-# Check if reflector is installed
 if ! command -v reflector &>/dev/null; then
   echo -e "${RED}⚠️ reflector is not installed. Skipping mirror update.${NC}"
   echo -e "${YELLOW}Install reflector with: sudo pacman -S reflector${NC}"
 else
-  if confirm_action "Do you want to update the pacman mirrors?"; then
-    # Try to detect country automatically through IP geolocation
-    COUNTRY=$(curl -s https://ipinfo.io/country 2>/dev/null)
-    if [ -z "$COUNTRY" ]; then
-      echo -e "${YELLOW}Could not detect country automatically, using default settings.${NC}"
-      run_command "reflector --verbose --latest 5 --sort rate --save /etc/pacman.d/mirrorlist"
-    else
-      echo -e "${CYAN}Detected country: $COUNTRY${NC}"
-      run_command "reflector --verbose --country '$COUNTRY' --latest 5 --sort rate --save /etc/pacman.d/mirrorlist"
-    fi
-    echo -e "${CYAN}📊 Mirror list updated for optimal speeds${NC}"
+  # Pays proches = souvent les plus rapides depuis la Normandie
+  MIRROR_COUNTRIES="FR,BE,NL,DE,LU,GB"
+  # Nombre de miroirs conservés
+  MIRROR_NUMBER=15
+  # Préfère IPv4 si IPv6 est capricieux chez toi; retire --ipv4 si tout va bien en IPv6
+  REFLECTOR_CMD="reflector --country $MIRROR_COUNTRIES \
+    --protocol https --age 12 --completion-percent 100 \
+    --ipv4 --fastest $MIRROR_NUMBER \
+    --save /etc/pacman.d/mirrorlist"
+
+  if confirm_action "Do you want to refresh mirrors with the fastest nearby ones?"; then
+    run_command "$REFLECTOR_CMD"
+    # Force un refresh des bases après mise à jour des mirrors
+    run_command "pacman -Syy"
+    echo -e "${GREEN}✅ Mirrors updated to fastest nearby${NC}"
   else
     echo -e "${YELLOW}⏩ Skipping mirror update${NC}"
   fi
