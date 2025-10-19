@@ -3,6 +3,18 @@
 # 1.  Fonctions utilitaires
 # -------------------------------------------------------------
 # Préfixe PATH seulement si le chemin n’y est pas déjà présent
+typeset -gA CDMARKS=(
+  ppc   "$PPROOT/projets/coding"
+  ppw   "$PPROOT/projets/web"
+  ppp   "$PPROOT/projets/personal"
+  ppcfg "$PPROOT/ressources/configs"
+  ppdoc "$PPROOT/ressources/docs"
+  pptool "$PPROOT/ressources/tools"
+  pparch "$PPROOT/ressources/archives"
+  ppm   "$PPROOT/centres_interet/manhwa"
+  ppl   "$PPROOT/centres_interet/lua"
+)
+
 autoload -U add-zsh-hook
 pathprepend() {
   case ":$PATH:" in
@@ -13,7 +25,25 @@ pathprepend() {
 
 # Override de la commande `cd` pour activer un venv local
 function cd() {
-  builtin cd "$@" || return
+  emulate -L zsh
+  setopt localoptions no_shwordsplit
+
+  if (( $# == 0 )); then
+    builtin cd || return
+  else
+    local target="$1"
+    # si ce n’est pas un switch (-), ni absolu (/), ni déjà ~expanded
+    if [[ "$target" != -* && "$target" != /* && "$target" != ~* ]]; then
+      local head="${target%%/*}"
+      local tail=""
+      [[ "$target" == */* ]] && tail="/${target#*/}"
+      if [[ -n ${CDMARKS[$head]} ]]; then
+        target="${CDMARKS[$head]}$tail"
+      fi
+    fi
+    builtin cd -- "$target" || return
+  fi
+
   [[ -f "activate_venv.sh" ]] && source "activate_venv.sh"
 }
 
