@@ -104,6 +104,7 @@ lib32-mpg123
 lib32-nvidia-utils
 lib32-openal
 lib32-v4l-utils
+libayatana-appindicator
 libva-nvidia-driver-git
 light
 lightdm
@@ -195,9 +196,9 @@ shellcheck
 signal-desktop
 slurp
 spotify-tui
-steam
-steam-native-runtime
 sudo
+suwayomi-jui-bin
+suwayomi-server-bin
 swappy
 swayidle
 swww
