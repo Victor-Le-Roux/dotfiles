@@ -25,6 +25,7 @@ calibre-bin
 cava
 cbindgen
 ccache
+chromium
 citra
 clang
 cliphist
@@ -56,6 +57,7 @@ figlet
 firefox
 fish
 flatpak
+fuse-overlayfs
 gamescope
 gcc13
 gcc13-libs
@@ -141,6 +143,7 @@ networkmanager
 nitrogen
 nnn
 nodejs
+noto-fonts
 noto-fonts-emoji
 npm
 ntfs-3g
