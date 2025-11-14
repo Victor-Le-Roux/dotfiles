@@ -1,6 +1,7 @@
 7zip
 alacritty
 alsa-plugins
+alsa-utils
 android-tools
 arandr
 arch-audit
@@ -26,7 +27,6 @@ cava
 cbindgen
 ccache
 chromium
-citra
 clang
 cliphist
 cmake
@@ -46,7 +46,6 @@ dotnet-runtime-8.0
 dotnet-sdk
 dotnet-sdk-8.0
 efibootmgr
-emacs
 eog
 expect
 eza
@@ -128,8 +127,6 @@ marktext-bin
 mdcat
 melonds
 mesa-utils
-minecraft-launcher
-minecraft-launcher-debug
 mitmproxy
 mousepad
 mpv
@@ -157,7 +154,6 @@ os-prober
 otf-font-awesome
 pacman-contrib
 pamixer
-pandoc-cli
 paru
 pavucontrol
 picom
@@ -170,6 +166,7 @@ pokemon-colorscripts-git
 polkit-gnome
 postgresql
 postman-bin
+prismlauncher
 proton-vpn-gtk-app
 pwgen
 pyenv

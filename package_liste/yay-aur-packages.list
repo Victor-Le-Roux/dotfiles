@@ -3,7 +3,6 @@ aura
 aura-debug
 brave-bin
 calibre-bin
-citra
 debtap
 ffuf
 gcc13
@@ -19,8 +18,6 @@ markdown-reader
 markdown-reader-debug
 marktext-bin
 melonds
-minecraft-launcher
-minecraft-launcher-debug
 neofetch
 nitrogen
 nwg-look-bin
