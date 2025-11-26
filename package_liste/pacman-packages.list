@@ -53,6 +53,7 @@ fd
 ffmpegthumbnailer
 ffuf
 figlet
+fio
 firefox
 fish
 flatpak
@@ -63,6 +64,7 @@ gcc13-libs
 gdb
 gimp
 git
+glances
 glew
 glfw
 glow
@@ -77,6 +79,7 @@ grub
 gtk-engine-murrine
 gvfs
 gvfs-mtp
+hdparm
 hey-bin
 htop
 httpie
@@ -195,6 +198,7 @@ shellcheck
 signal-desktop
 slurp
 spotify-tui
+stress-ng
 sudo
 suwayomi-jui-bin
 suwayomi-server-bin
@@ -203,6 +207,7 @@ swayidle
 swww
 sxhkd
 syncthing
+sysbench
 texlive-bin
 texlive-binextra
 thorium-browser-bin
