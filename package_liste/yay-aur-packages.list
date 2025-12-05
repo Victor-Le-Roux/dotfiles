@@ -4,6 +4,7 @@ aura-debug
 brave-bin
 calibre-bin
 debtap
+dotnet-runtime-7.0
 ffuf
 gcc13
 gcc13-libs
