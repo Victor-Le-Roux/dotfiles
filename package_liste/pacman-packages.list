@@ -147,7 +147,7 @@ noto-fonts
 noto-fonts-emoji
 npm
 ntfs-3g
-nvidia-dkms
+nvidia-open-dkms
 nvidia-settings
 nvtop
 nwg-look-bin
