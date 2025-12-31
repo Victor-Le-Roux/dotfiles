@@ -3,6 +3,8 @@
 # 1.  Fonctions utilitaires
 # -------------------------------------------------------------
 # Préfixe PATH seulement si le chemin n’y est pas déjà présent
+export EDITOR=nvim
+export VISUAL=nvim
 typeset -gA CDMARKS=(
   ppc   "$PPROOT/projets/coding"
   ppw   "$PPROOT/projets/web"

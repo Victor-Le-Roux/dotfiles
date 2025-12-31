@@ -128,7 +128,6 @@ markdown-reader
 markdown-reader-debug
 marktext-bin
 mdcat
-melonds
 mesa-utils
 mitmproxy
 mousepad
@@ -178,11 +177,12 @@ python-pip
 python-pipx
 python-pywal
 python-virtualenv
+qalculate-gtk
 qemu-desktop
 qt5ct
 qt6-wayland
 qt6ct
-qutebrowser
+ranger
 rar
 reflector
 ripgrep
@@ -191,7 +191,7 @@ rkhunter
 rofi
 ruby
 ruby-bundler
-rustup
+rust
 scrcpy
 screenkey
 sddm-git
