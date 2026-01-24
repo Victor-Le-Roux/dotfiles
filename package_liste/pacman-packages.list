@@ -58,6 +58,7 @@ firefox
 fish
 flatpak
 fuse-overlayfs
+gamemode
 gamescope
 gcc13
 gcc13-libs
@@ -102,6 +103,7 @@ kvantum
 lf
 lib32-alsa-lib
 lib32-alsa-plugins
+lib32-gamemode
 lib32-giflib
 lib32-gnutls
 lib32-libpulse
@@ -122,6 +124,7 @@ llvm
 luarocks
 lxappearance
 lynis
+lzip
 mako
 man-pages
 markdown-reader
@@ -175,6 +178,7 @@ python-dbus-next
 python-distutils-extra
 python-pip
 python-pipx
+python-pyclip
 python-pywal
 python-virtualenv
 qalculate-gtk
@@ -199,6 +203,7 @@ shellcheck
 signal-desktop
 slurp
 spotify-tui
+steam
 stress-ng
 sudo
 suwayomi-jui-bin
@@ -235,7 +240,6 @@ volumeicon
 vulkan-tools
 wakeonlan
 waybar
-waydroid
 wine
 wine-gecko
 wine-mono
