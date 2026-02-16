@@ -2,6 +2,7 @@ bibata-cursor-theme
 brave-bin
 calibre-bin
 everforest-gtk-theme-git
+gcalcli
 gcc13
 gcc13-libs
 gtk-engine-murrine
@@ -21,6 +22,7 @@ spotify-tui
 suwayomi-jui-bin
 suwayomi-server-bin
 thorium-browser-bin
+vscodium-bin
 wlogout
 wlogout-debug
 wrk
