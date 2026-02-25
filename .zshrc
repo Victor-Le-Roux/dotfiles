@@ -134,3 +134,35 @@ alias ppl='cd "$PPROOT/centres_interet/lua"'
 # Aide
 alias pphelp='glow "$PPROOT/README.md"'
 
+# -------------------------------------------------------------
+# 7.  FZF + ripgrep workflow
+# -------------------------------------------------------------
+export FZF_DEFAULT_COMMAND='rg --files --hidden --glob "!.git/*"'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+if command -v fd >/dev/null 2>&1; then
+  export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+fi
+export FZF_DEFAULT_OPTS='--height=80% --layout=reverse --border'
+
+alias tms='tmux-sessionizer'
+
+ff() {
+  local selected
+  selected="$(rg --files --hidden --glob '!.git/*' | fzf --preview 'bat --style=numbers --color=always {}' --preview-window 'right,60%,border-left')"
+  [[ -z "$selected" ]] && return 0
+  "${EDITOR:-nvim}" "$selected"
+}
+
+frg() {
+  if [[ $# -eq 0 ]]; then
+    echo "usage: frg <pattern>"
+    return 1
+  fi
+  local selected file line
+  selected="$(rg --line-number --no-heading --color=never --hidden --glob '!.git/*' "$*" | fzf --delimiter ':' --nth=3.. --preview 'bat --style=numbers --color=always {1} --highlight-line {2}' --preview-window 'right,60%,border-left')"
+  [[ -z "$selected" ]] && return 0
+  file="${selected%%:*}"
+  line="${selected#*:}"
+  line="${line%%:*}"
+  "${EDITOR:-nvim}" "+${line}" "$file"
+}

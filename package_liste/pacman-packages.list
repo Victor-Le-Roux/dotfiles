@@ -9,6 +9,7 @@ base
 base-devel
 bat
 bat-extras
+bear
 bibata-cursor-theme
 bind
 blueman
@@ -32,6 +33,7 @@ docker
 docker-compose
 dosfstools
 efibootmgr
+entr
 eog
 everforest-gtk-theme-git
 expect
@@ -42,6 +44,7 @@ firefox
 fish
 flatpak
 fuse-overlayfs
+fzf
 gamemode
 gamescope
 gcalcli
@@ -181,6 +184,8 @@ swayidle
 swww
 sxhkd
 syncthing
+tesseract-data-eng
+tesseract-data-fra
 texlive-bin
 texlive-binextra
 thorium-browser-bin
@@ -193,6 +198,8 @@ ttf-droid
 ttf-fira-code
 ttf-firacode-nerd
 ttf-hack
+ttf-ibm-plex
+ttf-ibmplex-mono-nerd
 ttf-jetbrains-mono
 ttf-jetbrains-mono-nerd
 ttf-proggyclean-nerd
@@ -265,6 +272,8 @@ yay-debug
 ydotool
 youtube-music-for-desktop-bin
 yt-dlp
+zathura
+zathura-pdf-mupdf
 zip
 zoxide
 zsh
