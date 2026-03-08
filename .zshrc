@@ -78,7 +78,7 @@ export WLR_DRM_DEVICES="/dev/dri/card1:/dev/dri/card0"
 # -------------------------------------------------------------
 # 4.  Oh‑My‑Zsh
 # -------------------------------------------------------------
-ZSH_THEME="simple"
+ZSH_THEME=""
 plugins=(
   git
   archlinux
@@ -87,6 +87,10 @@ plugins=(
 )
 
 source "$ZSH/oh-my-zsh.sh"
+
+# Starship prompt
+export STARSHIP_CONFIG=~/.config/starship.toml
+eval "$(starship init zsh)"
 
 # -------------------------------------------------------------
 # 5.  Alias généraux
@@ -166,3 +170,9 @@ frg() {
   line="${line%%:*}"
   "${EDITOR:-nvim}" "+${line}" "$file"
 }
+
+# -------------------------------------------------------------
+# 8.  Startup Splash Screen
+# -------------------------------------------------------------
+# fastfetch is now in ~/.zlogin to avoid getting cleared by starship/zsh init
+export PATH="/home/victor/.npm-global/bin:$PATH"

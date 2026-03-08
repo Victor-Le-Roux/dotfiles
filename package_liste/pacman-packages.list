@@ -25,6 +25,7 @@ chromium
 clang
 cliphist
 cmake
+cpupower
 cracklib
 cronie
 direnv
@@ -38,6 +39,7 @@ eog
 everforest-gtk-theme-git
 expect
 eza
+fastfetch
 fd
 ffmpegthumbnailer
 firefox
@@ -70,7 +72,9 @@ gvfs
 gvfs-mtp
 hey-bin
 htop
+hypridle
 hyprland
+hyprlock
 hyprshade
 hyprshot
 imagemagick
@@ -177,6 +181,7 @@ signal-desktop
 sioyek
 slurp
 spotify-tui
+starship
 sudo
 suwayomi-jui-bin
 suwayomi-server-bin
@@ -195,6 +200,7 @@ thunar-archive-plugin
 thunar-volman
 tmux
 tree
+ttf-crimson-pro
 ttf-droid
 ttf-fira-code
 ttf-firacode-nerd
