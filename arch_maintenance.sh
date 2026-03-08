@@ -301,6 +301,34 @@ if have paru; then
 fi
 
 # ══════════════════════════════════════════════════════════════
+#  Paquets non suivis / retirés d'AUR
+# ══════════════════════════════════════════════════════════════
+
+section "Paquets abandonnés / non suivis"
+# pacman -Qm liste tous les paquets qui ne sont PAS dans les dépôts officiels
+mapfile -t foreign_pkgs < <(pacman -Qm | awk '{print $1}')
+
+if [[ ${#foreign_pkgs[@]} -gt 0 ]]; then
+  if have paru; then
+    echo -e "${CYN}Recherche de paquets retirés d'AUR...${RST}"
+    dropped=()
+    for pkg in "${foreign_pkgs[@]}"; do
+      # Si paru ne trouve pas d'info, c'est que le paquet n'est plus sur AUR
+      if ! paru -Si "$pkg" &>/dev/null; then
+        dropped+=("$pkg")
+      fi
+    done
+    
+    if [[ ${#dropped[@]} -gt 0 ]]; then
+      echo -e "${RED}⚠️  Ces paquets sont installés mais introuvables sur AUR (Abandonnés ?) :${RST}"
+      printf '  - %s\n' "${dropped[@]}"
+    else
+      echo -e "${GRN}Tous les paquets externes existent encore sur AUR.${RST}"
+    fi
+  fi
+fi
+
+# ══════════════════════════════════════════════════════════════
 #  Flatpak
 # ══════════════════════════════════════════════════════════════
 
@@ -390,6 +418,29 @@ if [[ $OPT_JOURNALS == true ]]; then
   section "Nettoyage journaux"
   if confirm "Supprimer les journaux > 2 semaines ?"; then
     run "${SUDO[@]}" journalctl --vacuum-time=2weeks
+  fi
+fi
+
+# ══════════════════════════════════════════════════════════════
+#  Nécessité de Redémarrage
+# ══════════════════════════════════════════════════════════════
+
+section "Vérification des processus / Kernel"
+# Vérification si le noyau chargé en RAM est différent de celui sur le disque
+if have uname; then
+  CURRENT_KERNEL=$(uname -r)
+  # Méthode simple : vérifier si le dossier des modules du noyau actuel existe toujours
+  if [[ ! -d "/usr/lib/modules/${CURRENT_KERNEL}" ]]; then
+    echo -e "${RED}${BLD}⚠️  Le noyau a été mis à jour. Un redémarrage est fortement recommandé.${RST}"
+  else
+    echo -e "${GRN}Noyau à jour (aucun redémarrage critique requis).${RST}"
+  fi
+fi
+
+# Optionnel : si vous avez installé 'needrestart'
+if have needrestart; then
+  if confirm "Vérifier les services nécessitant un redémarrage ?"; then
+    run "${SUDO[@]}" needrestart -b || true
   fi
 fi
 
