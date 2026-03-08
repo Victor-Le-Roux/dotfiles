@@ -132,7 +132,6 @@ ntfs-3g
 nvidia-open
 nvidia-settings
 nvtop
-nwg-look-bin
 os-prober
 otf-font-awesome
 pacman-contrib
@@ -180,7 +179,6 @@ shellcheck
 signal-desktop
 sioyek
 slurp
-spotify-tui
 starship
 sudo
 suwayomi-jui-bin
@@ -224,7 +222,6 @@ wev
 wireplumber
 wl-clipboard
 wlogout
-wlogout-debug
 wlsunset
 wrk
 wtype
@@ -275,7 +272,6 @@ xorg-xwud
 yad
 yasm
 yay
-yay-debug
 ydotool
 youtube-music-for-desktop-bin
 yt-dlp
