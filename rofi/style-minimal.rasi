@@ -1,0 +1,118 @@
+configuration {
+    modi: "drun,window";
+    show-icons: true;
+    icon-theme: "Papirus";
+    drun-display-format: "{name}";
+    disable-history: false;
+    sort: true;
+    sorting-method: "fzf";
+    matching: "fuzzy";
+    click-to-exit: true;
+}
+
+* {
+    font: "Inter Medium 12";
+    background: #e8e3d3f2;
+    background-alt: #d8d2bf;
+    foreground: #1b1f2a;
+    selected: #d8d2bf;
+    urgent: #cc241d;
+}
+
+window {
+    transparency: "real";
+    location: center;
+    anchor: center;
+    width: 520px;
+    border: 1px;
+    border-radius: 12px;
+    border-color: #bdb7a6;
+    background-color: @background;
+}
+
+mainbox {
+    spacing: 8px;
+    padding: 12px;
+    background-color: transparent;
+    children: [ "inputbar", "listview" ];
+}
+
+inputbar {
+    spacing: 8px;
+    padding: 8px 10px;
+    border: 1px;
+    border-radius: 10px;
+    border-color: #bdb7a6;
+    background-color: #ece7d8;
+    children: [ "textbox-prompt-colon", "entry" ];
+}
+
+textbox-prompt-colon {
+    str: "Apps";
+    expand: false;
+    text-color: #6a6558;
+    background-color: transparent;
+}
+
+entry {
+    expand: true;
+    text-color: @foreground;
+    placeholder: "Lancer une application";
+    placeholder-color: #6a6558;
+    background-color: transparent;
+}
+
+listview {
+    lines: 8;
+    columns: 1;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    spacing: 4px;
+    background-color: transparent;
+}
+
+element {
+    children: [ "element-icon", "element-text" ];
+    spacing: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: transparent;
+    text-color: @foreground;
+}
+
+element normal.normal,
+element normal.active {
+    background-color: transparent;
+    text-color: @foreground;
+}
+
+element normal.urgent {
+    background-color: @urgent;
+    text-color: #e8e3d3;
+}
+
+element selected.normal,
+element selected.active {
+    background-color: @selected;
+    text-color: #1b1f2a;
+    border: 1px;
+    border-color: #2f9caf;
+}
+
+element selected.urgent {
+    background-color: @urgent;
+    text-color: #e8e3d3;
+}
+
+element-icon {
+    enabled: true;
+    size: 22px;
+    background-color: transparent;
+    text-color: inherit;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+}

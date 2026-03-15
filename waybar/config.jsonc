@@ -1,158 +1,120 @@
 {
-    "layer": "top",
-    "position": "top",
-    "spacing": 0,
-    "height": 32,
-    "modules-left": [
-        "custom/logo",
-        "hyprland/workspaces"
-    ],
-    "modules-center": [
-    ],
-    "modules-right": [
-        "tray",
-		"cpu",
-        "memory",
-		"custom/disk-usage",
-	"custom/diskfree",
-        "clock",
-        "wireplumber",
-        "custom/power"
-    ],
-    "wlr/taskbar": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "on-click-right": "fullscreen",
-        "icon-theme": "WhiteSur",
-        "icon-size": 25,
-        "tooltip-format": "{title}"
-    },
-    "hyprland/workspaces": {
-        "on-click": "activate",
-        "disable-scroll": true,
-        "all-outputs": true,
-        "warp-on-scroll": false,
-        "format": "{name}",
-        "persistent_workspaces": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": []
-        }
-    },
-    "cpu": {
-        "format": "🔥 CPU: {usage}%" ,
-        "tooltip": false
-    },
-    "memory": {
-        "interval": 5,
-        "format": "🧠 RAM: {}%",
-        "max-length": 15
-    },
-	"custom/disk-usage": {
-    "format": "💽 {}%",
-    "interval": 300,
-    "max-length": 20,
-    "exec": "df / --output=pcent | tail -n1 | tr -d ' %'"
-	},
-    "tray": {
-        "spacing": 10
-    },
-	"clock": {
-    "tooltip-format": "{calendar}",
-    "format-alt": "{:%a, %b %d %Y}",
-    "format": "{:%d/%m - %H:%M}"
-	},
-    "network": {
-        "format-wifi" : "{icon}",
-        "format-icons": ["󰤯","󰤟","󰤢","󰤥","󰤨"],
-        "format-ethernet": "󰀂",
-	"format-alt" : "󱛇",
-        "format-disconnected" : "󰖪",
-	"tooltip-format-wifi": "{icon} {essid}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-        "tooltip-format-ethernet": "󰀂  {ifname}\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
-	"tooltip-format-disconnected": "Disconnected",
-	"on-click": "~/.config/rofi/wifi/wifi.sh &",
-        "on-click-right": "~/.config/rofi/wifi/wifinew.sh &",
-	"interval": 5,
-	"nospacing": 1,
-    },
-    "wireplumber": {
-        "format": "{icon} {volume}%",
-        "format-bluetooth": "󰂰 {volume}%",
-        "nospacing": 1,
-        "tooltip-format": "Volume : {volume}%",
-        "format-muted": "󰝟",
-        "format-icons": {
-            "headphone": "",
-            "default": ["󰖀","󰕾",""]
-        },
-        "on-click": "pamixer -t",
-        "scroll-step": 1
-    },
-    "custom/logo": {
-        "format": "  ",
-        "tooltip": false,
-        "on-click": "~/.config/rofi/launchers/misc/launcher.sh &"
-    },
-    "battery": {
-        "format": "{capacity}% {icon}",
-        "format-icons": {
-            "charging": [
-                "󰢜",
-                "󰂆",
-                "󰂇",
-                "󰂈",
-                "󰢝",
-                "󰂉",
-                "󰢞",
-                "󰂊",
-                "󰂋",
-                "󰂅"
-            ],
-            "default": [
-                "󰁺",
-                "󰁻",
-                "󰁼",
-                "󰁽",
-                "󰁾",
-                "󰁿",
-                "󰂀",
-                "󰂁",
-                "󰂂",
-                "󰁹"
-            ]
-        },
-        "format-full": "Charged ",
-        "interval": 5,
-        "states": {
-            "warning": 20,
-            "critical": 10
-        },
-        "tooltip": false
-    },
-    "custom/pacman": {
-	"format": "{}  ",
-	"interval": "once",
-	"exec": "pacman_packages",
-	"on-click": "update-system",
-	"signal": 8
-    },
-        "custom/diskfree": {
-        "format": "🖴 Disk: {} used",
-	"interval": 300,
-        "max-length": 20,
-         "exec": "df --total -hl | grep 'sda1' | awk '{print $5}'"
-    },
-    "custom/power": {
-        "format": "󰤆",
-        "tooltip": false,
-		"on-click": "wlogout"
-    }
-}
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "spacing": 0,
+  "margin-top": 0,
+  "margin-left": 0,
+  "margin-right": 0,
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["custom/calendar"],
+  "modules-right": ["pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
 
+  "hyprland/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true,
+    "active-only": false,
+    "format": "{name}"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-bluetooth": "󰋋 {volume}%",
+    "format-bluetooth-muted": "󰟎 mute",
+    "format-muted": "󰝟 mute",
+    "format-icons": {
+      "headphone": "󰋋",
+      "hands-free": "󰋋",
+      "headset": "󰋋",
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "scroll-step": 5,
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-scroll-up": "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+  },
+
+  "group/system": {
+    "orientation": "inherit",
+    "modules": ["custom/system-toggle", "custom/cpu", "custom/ram", "custom/disk", "network"],
+    "drawer": {
+      "transition-duration": 250,
+      "children-class": "system-item",
+      "transition-left-to-right": false
+    }
+  },
+
+  "network": {
+    "format-wifi": "NET {signalStrength}%",
+    "format-ethernet": "NET LAN",
+    "format-disconnected": "NET OFF",
+    "tooltip": false
+  },
+
+  "custom/system-toggle": {
+    "format": "SYS",
+    "tooltip": false
+  },
+
+  "custom/cpu": {
+    "exec": "~/.config/waybar/scripts/cpu_usage.sh",
+    "interval": 8,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/ram": {
+    "exec": "~/.config/waybar/scripts/ram_usage.sh",
+    "interval": 10,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/disk": {
+    "exec": "~/.config/waybar/scripts/disk_usage.sh",
+    "interval": 15,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/updates": {
+    "exec": "~/.config/waybar/scripts/paru_updates.sh",
+    "interval": 600,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": false
+  },
+
+  "custom/calendar": {
+    "exec": "bash ~/.config/waybar/scripts/next_gcal_event.sh",
+    "interval": 120,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true
+  },
+
+  "tray": {
+    "icon-size": 14,
+    "spacing": 10
+  },
+
+  "clock": {
+    "locale": "fr_FR.UTF-8",
+    "format": "{:%d/%m %H:%M}",
+    "tooltip": false
+  },
+
+  "custom/aoc-rotate": {
+    "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true,
+    "on-click": "~/.config/waybar/scripts/aoc_rotate.sh toggle"
+  },
+
+  "custom/power": {
+    "format": "⏻",
+    "tooltip": false,
+    "on-click": "/home/victor/.local/bin/wlogout"
+  }
+}

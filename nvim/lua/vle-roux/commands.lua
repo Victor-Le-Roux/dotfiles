@@ -1,7 +1,5 @@
-local nnoremap = require("vle-roux.keymap").nnoremap
-
 local build_commands = {
-  c = "!g++ -std=c++17 -o %:p:r.o %",
+  c = "!gcc -std=c17 -Wall -Wextra -O2 -o %:p:r.o %",
   cpp = "!g++ -std=c++17 -Wall -O2 -o %:p:r.o %",
   rust = "!cargo build --release",
   go = "!go build",
@@ -11,7 +9,7 @@ local build_commands = {
 }
 
 local debug_build_commands = {
-  c = "!g++ -std=c++17 -g -o %:p:r.o %",
+  c = "!gcc -std=c17 -Wall -Wextra -g -O0 -o %:p:r.o %",
   cpp = "!g++ -std=c++17 -g -o %:p:r.o %",
   rust = "!cargo build",
   go = "!go build",
@@ -77,59 +75,81 @@ vim.api.nvim_create_user_command("UpdateAll", function()
   vim.cmd([[MasonUpdate]])
 end, {})
 
-local function getWords()
-  if vim.fn.getfsize(vim.fn.expand("%")) > 200000 then
-    return ""
-  end
-
-  if vim.fn.wordcount().visual_words == 1 then
-    return "1 word"
-  elseif not (vim.fn.wordcount().visual_words == nil) then
-    return tostring(vim.fn.wordcount().visual_words) .. " words"
-  else
-    if vim.fn.wordcount().words == 1 then
-      return "1 word"
-    else
-      return tostring(vim.fn.wordcount().words) .. " words"
-    end
-  end
-end
-
-local wordCountOn = false
+vim.g.vle_word_count_enabled = false
 
 vim.api.nvim_create_user_command("WordCount", function()
-  if wordCountOn then
-    require("lualine").setup({
-      sections = {
-        lualine_c = { "filename" },
-      },
-    })
-    wordCountOn = true
-  else
-    require("lualine").setup({
-      sections = {
-        lualine_c = { "filename", { getWords } },
-      },
-    })
-    wordCountOn = true
+  vim.g.vle_word_count_enabled = not vim.g.vle_word_count_enabled
+  local ok, lualine = pcall(require, "lualine")
+  if ok then
+    lualine.refresh()
   end
 end, {})
 
-local rot13 = false
-local rot13_id = 0
+vim.api.nvim_create_user_command("MarkdownPreview", function()
+  require("vle-roux.markdown_preview").toggle()
+end, {})
+
+vim.api.nvim_create_user_command("MarkdownPreviewRefresh", function()
+  require("vle-roux.markdown_preview").refresh()
+end, {})
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+  pattern = { "*.md", "*.markdown" },
+  callback = function(args)
+    require("vle-roux.markdown_preview").refresh_if_visible(args.buf)
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "CursorMoved", "BufEnter" }, {
+  pattern = { "*.md", "*.markdown" },
+  callback = function(args)
+    require("vle-roux.markdown_preview").sync_if_visible(args.buf)
+  end,
+})
+
+vim.api.nvim_create_autocmd("VimResized", {
+  callback = function()
+    require("vle-roux.markdown_preview").refresh_visible()
+  end,
+})
+
+local function rot13_char(char)
+  local byte = string.byte(char)
+  if not byte then
+    return char
+  end
+
+  if byte >= 65 and byte <= 90 then
+    return string.char(((byte - 65 + 13) % 26) + 65)
+  end
+
+  if byte >= 97 and byte <= 122 then
+    return string.char(((byte - 97 + 13) % 26) + 97)
+  end
+
+  return char
+end
+
+local rot13_enabled = false
+local rot13_id = nil
 
 vim.api.nvim_create_user_command("Rot13", function()
-  if not rot13 then
+  if not rot13_enabled then
     rot13_id = vim.api.nvim_create_autocmd({ "InsertCharPre" }, {
       pattern = { "*" },
-      callback = function(ev)
-        -- print(vim.inspect(ev))
-        local keys = vim.api.nvim_replace_termcodes("<Esc>vg?a", true, false, true)
-        vim.api.nvim_feedkeys(keys, "n", false)
+      callback = function()
+        if vim.v.char and #vim.v.char == 1 then
+          vim.v.char = rot13_char(vim.v.char)
+        end
       end,
     })
+    rot13_enabled = true
   else
-    vim.api.nvim_del_autocmd(rot13_id)
+    if rot13_id then
+      pcall(vim.api.nvim_del_autocmd, rot13_id)
+    end
+    rot13_enabled = false
+    rot13_id = nil
   end
 end, {})
 

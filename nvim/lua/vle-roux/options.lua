@@ -21,8 +21,11 @@
    signcolumn = "yes",
    showmode = false,
  --  errorbells = false,
-   wrap = false,
+   wrap = true,
+   linebreak = true,
+   breakindent = true,
    cursorline = true,
+   cursorlineopt = "number",
    fileencoding = "utf-8",
  
    backup = false,
@@ -40,7 +43,7 @@
    title = true,
    -- titlestring = "%t - Wvim",
    titlestring = "Neovim - %t",
-   guifont = "MesloLGS NF:h18",
+   guifont = "JetBrainsMono Nerd Font Mono:h16",
    -- clipboard = "unnamedplus",
  }
  
@@ -52,3 +55,5 @@
  for option, value in pairs(options) do
    vim.opt[option] = value
  end
+
+vim.g.skip_ts_context_commentstring_module = true
