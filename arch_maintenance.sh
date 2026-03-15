@@ -400,7 +400,10 @@ if [[ $OPT_CACHE_CLEAN == true ]]; then
     ACTIONS_DONE+=("✓ Cache pacman nettoyé")
   fi
   if have paru; then
-    if run paru_safe -Scd --aur --noconfirm; then
+	if [[ $OPT_DRY_RUN == false ]]; then
+		rm -rf ~/.cache/paru/clone/*/
+  		rm -rf ~/.cache/paru/diff/
+	fi
       ACTIONS_DONE+=("✓ Cache AUR nettoyé")
     fi
   fi
