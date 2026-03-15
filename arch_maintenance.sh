@@ -400,12 +400,11 @@ if [[ $OPT_CACHE_CLEAN == true ]]; then
     ACTIONS_DONE+=("✓ Cache pacman nettoyé")
   fi
   if have paru; then
-	if [[ $OPT_DRY_RUN == false ]]; then
-		rm -rf ~/.cache/paru/clone/*/
-  		rm -rf ~/.cache/paru/diff/
-	fi
-      ACTIONS_DONE+=("✓ Cache AUR nettoyé")
+    if [[ $OPT_DRY_RUN == false ]]; then
+      rm -rf "${HOME}/.cache/paru/clone/"*/
+      rm -rf "${HOME}/.cache/paru/diff/"
     fi
+    ACTIONS_DONE+=("✓ Cache AUR nettoyé")
   fi
 fi
 
