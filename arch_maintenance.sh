@@ -180,6 +180,7 @@ if [[ $OPT_AC_REQUIRED == true ]]; then
     echo -e "${CYN}Pas de batterie détectée (PC fixe) — vérification secteur ignorée.${RST}"
   fi
 fi
+
 # Reseau
 has_network() {
   have curl && curl -fsI --max-time 3 https://archlinux.org &>/dev/null && return 0
