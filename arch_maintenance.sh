@@ -496,7 +496,7 @@ fi
 # ══════════════════════════════════════════════════════════════
 
 section "Disque"
-df -h $(findmnt -rno TARGET / /var /home 2>/dev/null | sort -u) 2>/dev/null || df -h /
+df -h /
 echo ""
 echo -e "${BLU}${BLD}══════════════════════════════════════════${RST}"
 echo -e "${CYN}Termine: $(date)${RST}"
