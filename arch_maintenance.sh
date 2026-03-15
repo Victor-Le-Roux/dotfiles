@@ -242,6 +242,24 @@ if [[ $OPT_BACKUP == true ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════
+#  Snapshot Btrfs
+# ══════════════════════════════════════════════════════════════
+
+if [[ $OPT_UPDATE == true ]] && findmnt -rno FSTYPE / 2>/dev/null | grep -q btrfs; then
+  section "Snapshot Btrfs"
+  if confirm "Creer un snapshot pre-update ?"; then
+    SNAP_DIR="/.snapshots"
+    if [[ -d "$SNAP_DIR" ]]; then
+      SNAP_NAME="pre-maintenance_$(date +%Y%m%d_%H%M)"
+      run "${SUDO[@]}" btrfs subvolume snapshot / "${SNAP_DIR}/${SNAP_NAME}"
+      ACTIONS_DONE+=("✓ Snapshot Btrfs: ${SNAP_NAME}")
+    else
+      echo -e "${YEL}${SNAP_DIR} inexistant — snapshot ignore${RST}"
+    fi
+  fi
+fi
+
+# ══════════════════════════════════════════════════════════════
 #  Keyring
 # ══════════════════════════════════════════════════════════════
 
@@ -400,10 +418,8 @@ if [[ $OPT_CACHE_CLEAN == true ]]; then
     ACTIONS_DONE+=("✓ Cache pacman nettoyé")
   fi
   if have paru; then
-    if [[ $OPT_DRY_RUN == false ]]; then
-      rm -rf "${HOME}/.cache/paru/clone/"*/
-      rm -rf "${HOME}/.cache/paru/diff/"
-    fi
+    run rm -rf "${HOME}/.cache/paru/clone/"*/ || true
+    run rm -rf "${HOME}/.cache/paru/diff/" || true
     ACTIONS_DONE+=("✓ Cache AUR nettoyé")
   fi
 fi
@@ -439,6 +455,18 @@ fi
 # ══════════════════════════════════════════════════════════════
 #  Diagnostics
 # ══════════════════════════════════════════════════════════════
+
+section "Fichiers .pacnew / .pacsave"
+mapfile -t pacnew_files < <("${SUDO[@]}" find /etc -name "*.pacnew" -o -name "*.pacsave" 2>/dev/null)
+if [[ ${#pacnew_files[@]} -gt 0 ]]; then
+  echo -e "${YEL}Fichiers de config a fusionner :${RST}"
+  printf '  %s\n' "${pacnew_files[@]}"
+else
+  echo -e "${GRN}Aucun .pacnew/.pacsave${RST}"
+fi
+
+section "Dependances cassees"
+"${SUDO[@]}" pacman -Dk 2>&1 || true
 
 section "Services en echec"
 systemctl --failed 2>/dev/null || true
