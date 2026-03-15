@@ -339,8 +339,8 @@ EOF
 		echo -e "${YEL}⚠️  Analyse AUR incomplète (erreur Python, voir stderr)${RST}"
 	  fi
       
-      ood=$(echo "$parsed" | grep "^OOD:" | cut -d: -f2)
-      dropped=$(echo "$parsed" | grep "^DRP:" | cut -d: -f2)
+      ood=$(echo "$parsed" | grep "^OOD:" | cut -d: -f2 || true)
+	  dropped=$(echo "$parsed" | grep "^DRP:" | cut -d: -f2 || true)
       
       echo -e "\n${CYN}Paquets AUR out-of-date :${RST}"
       if [[ -n $ood ]]; then
