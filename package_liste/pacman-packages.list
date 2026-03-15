@@ -153,7 +153,6 @@ pyenv
 python-dbus-next
 python-distutils-extra
 python-pip
-python-pipx
 python-pyclip
 python-pywal
 python-virtualenv
