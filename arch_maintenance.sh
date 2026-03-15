@@ -400,7 +400,7 @@ if [[ $OPT_CACHE_CLEAN == true ]]; then
     ACTIONS_DONE+=("✓ Cache pacman nettoyé")
   fi
   if have paru; then
-    if run paru_safe -Sc --aur --noconfirm; then
+    if run paru_safe -Scd --aur --noconfirm; then
       ACTIONS_DONE+=("✓ Cache AUR nettoyé")
     fi
   fi
@@ -494,8 +494,7 @@ fi
 # ══════════════════════════════════════════════════════════════
 
 section "Disque"
-df -h / /var /home 2>/dev/null || df -h
-
+df -h $(findmnt -rno TARGET / /var /home 2>/dev/null | sort -u) 2>/dev/null || df -h /
 echo ""
 echo -e "${BLU}${BLD}══════════════════════════════════════════${RST}"
 echo -e "${CYN}Termine: $(date)${RST}"
