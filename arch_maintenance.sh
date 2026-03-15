@@ -160,18 +160,26 @@ echo -e "${BLU}${BLD}═══════════════════�
 echo -e "${CYN}Debut: $(date)${RST}"
 
 section "Pre-vol"
-
 # AC power
 if [[ $OPT_AC_REQUIRED == true ]]; then
-  ac_online=0
-  for ac in /sys/class/power_supply/AC* /sys/class/power_supply/ACAD*; do
-    [[ -e "$ac/online" ]] || continue
-    read -r v < "$ac/online"
-    [[ $v == "1" ]] && ac_online=1
+  # Sur PC fixe, aucune batterie n'existe → check inutile, on passe
+  has_battery=false
+  for bat in /sys/class/power_supply/BAT*; do
+    [[ -e "$bat/status" ]] && has_battery=true && break
   done
-  [[ $ac_online -eq 1 ]] || die "Pas sur secteur (--allow-on-battery pour ignorer)."
-fi
 
+  if [[ $has_battery == true ]]; then
+    ac_online=0
+    for ac in /sys/class/power_supply/AC* /sys/class/power_supply/ACAD*; do
+      [[ -e "$ac/online" ]] || continue
+      read -r v < "$ac/online"
+      [[ $v == "1" ]] && ac_online=1
+    done
+    [[ $ac_online -eq 1 ]] || die "Pas sur secteur (--allow-on-battery pour ignorer)."
+  else
+    echo -e "${CYN}Pas de batterie détectée (PC fixe) — vérification secteur ignorée.${RST}"
+  fi
+fi
 # Reseau
 has_network() {
   have curl && curl -fsI --max-time 3 https://archlinux.org &>/dev/null && return 0
