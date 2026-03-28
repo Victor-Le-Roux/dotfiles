@@ -5,6 +5,7 @@ android-tools
 arandr
 arch-audit
 archlinux-wallpaper
+awww
 base
 base-devel
 bat
@@ -185,7 +186,6 @@ suwayomi-jui-bin
 suwayomi-server-bin
 swappy
 swayidle
-swww
 sxhkd
 syncthing
 tesseract-data-eng
