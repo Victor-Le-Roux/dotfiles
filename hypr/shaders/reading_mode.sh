@@ -8,6 +8,16 @@ current_theme_file="$home/.cache/quickshell/theme_mode"
 restore_file="$home/.cache/quickshell/reading_mode_restore"
 wallpaper_reading="$home/Pictures/desktop/WP/6.jpg"
 
+set_reading_wallpaper() {
+    local image_path="$1"
+
+    if command -v awww >/dev/null 2>&1 && awww query >/dev/null 2>&1; then
+        awww img "$image_path" --transition-type none >/dev/null 2>&1
+    elif command -v swww >/dev/null 2>&1 && swww query >/dev/null 2>&1; then
+        swww img "$image_path" --transition-type none >/dev/null 2>&1
+    fi
+}
+
 
 # SWITCHER
 # Check if shader is active
@@ -64,7 +74,7 @@ else
     $theme_script light
 
     # Set Wallpaper & Brightness (Async)
-    swww img "$wallpaper_reading" --transition-type none &
+    set_reading_wallpaper "$wallpaper_reading" &
     brightnessctl set 37% &
 
     # Apply E-ink Overrides

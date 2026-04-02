@@ -62,6 +62,26 @@ desired_wallpaper_for_transform() {
   esac
 }
 
+wallpaper_query() {
+  if command -v awww >/dev/null 2>&1; then
+    awww query "$@"
+  elif command -v swww >/dev/null 2>&1; then
+    swww query "$@"
+  else
+    return 1
+  fi
+}
+
+wallpaper_img() {
+  if command -v awww >/dev/null 2>&1; then
+    awww img "$@"
+  elif command -v swww >/dev/null 2>&1; then
+    swww img "$@"
+  else
+    return 1
+  fi
+}
+
 save_transform_state() {
   local value="$1"
   local previous=""
@@ -81,7 +101,7 @@ save_transform_state() {
 }
 
 get_current_wallpaper() {
-  swww query 2>/dev/null | awk -v mon="${monitor_name}" '
+  wallpaper_query 2>/dev/null | awk -v mon="${monitor_name}" '
     index($0, ": " mon ":") && index($0, "currently displaying: image: ") {
       sub(/^.*currently displaying: image: /, "", $0)
       print
@@ -95,14 +115,13 @@ apply_wallpaper() {
   local current=""
 
   [[ -f "${wanted}" ]] || return 0
-  command -v swww >/dev/null 2>&1 || return 0
-  swww query >/dev/null 2>&1 || return 0
+  wallpaper_query >/dev/null 2>&1 || return 0
 
   current="$(get_current_wallpaper)"
   [[ "${current}" == "${wanted}" ]] && return 0
 
   for _ in 1 2 3 4 5; do
-    swww img \
+    wallpaper_img \
       --outputs "${monitor_name}" \
       --resize crop \
       --transition-type none \
