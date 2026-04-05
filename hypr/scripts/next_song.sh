@@ -31,6 +31,10 @@ if ytm_next; then
   exit 0
 fi
 
-# 3) Fallback: playerctl
-playerctl next
+# 3) YTM via shortcut Hyprland
+if bash /home/victor/.config/hypr/scripts/ytm_shortcut.sh next; then
+  exit 0
+fi
 
+# 4) Fallback: playerctl
+playerctl next

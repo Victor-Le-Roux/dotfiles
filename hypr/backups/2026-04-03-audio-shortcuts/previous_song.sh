@@ -31,10 +31,6 @@ if ytm_prev; then
   exit 0
 fi
 
-# 3) YTM via shortcut Hyprland
-if bash /home/victor/.config/hypr/scripts/ytm_shortcut.sh previous; then
-  exit 0
-fi
-
-# 4) Fallback: playerctl
+# 3) Fallback: playerctl
 playerctl previous
+
