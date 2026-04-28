@@ -77,6 +77,7 @@ window#waybar {
   border: none;
 }
 
+#custom-bluetooth,
 #pulseaudio,
 #network,
 #group-system,
@@ -121,6 +122,14 @@ window#waybar {
 #custom-aoc-rotate.portrait {
   color: #2f9caf;
   font-weight: 700;
+}
+
+#custom-bluetooth.off {
+  color: #6a6558;
+}
+
+#custom-bluetooth.connected {
+  color: #2f9caf;
 }
 
 #pulseaudio.muted {

@@ -8,7 +8,7 @@
   "margin-right": 0,
   "modules-left": ["hyprland/workspaces"],
   "modules-center": ["custom/calendar"],
-  "modules-right": ["pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
+  "modules-right": ["custom/bluetooth", "pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
 
   "hyprland/workspaces": {
     "disable-scroll": true,
@@ -32,6 +32,16 @@
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
     "on-scroll-up": "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+",
     "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+  },
+
+  "custom/bluetooth": {
+    "exec": "~/.config/waybar/scripts/bluetooth.sh status",
+    "interval": 15,
+    "signal": 9,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true,
+    "on-click": "~/.config/waybar/scripts/bluetooth.sh toggle"
   },
 
   "group/system": {
