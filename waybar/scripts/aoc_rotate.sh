@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-preferred_monitor="DP-3"
+preferred_monitor="HDMI-A-1"
 portrait_wallpaper="$HOME/Pictures/wallpapers/nikko-gaido-the-road-to-nikko.jpg"
 landscape_wallpaper="$HOME/Pictures/wallpapers/kawase_hasui_kawarahata_gunma_1955.jpg"
 monitor_mode="1920x1080@60"
@@ -35,8 +35,8 @@ fi
 monitor_name="$(
   jq -r --arg preferred "${preferred_monitor}" '
     (
-      [.[] | select(.name == $preferred)] +
-      [.[] | select((((.make // "") + " " + (.model // "") + " " + (.description // "")) | test("AOC"; "i")))]
+      [.[] | select((((.make // "") + " " + (.model // "") + " " + (.description // "")) | test("AOC"; "i")))] +
+      [.[] | select(.name == $preferred)]
     )[0].name // empty
   ' <<<"${monitors_json}"
 )"

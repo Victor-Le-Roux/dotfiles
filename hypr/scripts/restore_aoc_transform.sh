@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-preferred_monitor="DP-3"
+preferred_monitor="HDMI-A-1"
 state_file="$HOME/.config/hypr/state/aoc_dp3_transform"
 monitor_mode="1920x1080@60"
 landscape_position="1920x0"
@@ -29,8 +29,8 @@ fi
 detect_monitor() {
   jq -r --arg preferred "${preferred_monitor}" '
     (
-      [.[] | select(.name == $preferred)] +
-      [.[] | select((((.make // "") + " " + (.model // "") + " " + (.description // "")) | test("AOC"; "i")))]
+      [.[] | select((((.make // "") + " " + (.model // "") + " " + (.description // "")) | test("AOC"; "i")))] +
+      [.[] | select(.name == $preferred)]
     )[0].name // empty
   '
 }
