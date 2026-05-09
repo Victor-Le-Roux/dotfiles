@@ -4,8 +4,8 @@ set -euo pipefail
 preferred_monitor="HDMI-A-1"
 state_file="$HOME/.config/hypr/state/aoc_dp3_transform"
 monitor_mode="1920x1080@60"
-landscape_position="1920x0"
-portrait_position="1920x0"
+landscape_position="3840x0"
+portrait_position="3840x0"
 landscape_scale="1"
 portrait_scale="1"
 
