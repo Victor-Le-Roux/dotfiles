@@ -54,6 +54,7 @@ gcalcli
 gcc13
 gcc13-libs
 gdb
+ghostty
 git
 glances
 glew
@@ -119,6 +120,7 @@ mousepad
 mpv
 mpv-mpris
 mtools
+music-assistant-desktop
 nano
 nasm
 neofetch
@@ -144,6 +146,7 @@ pamixer
 papirus-icon-theme
 paru
 pavucontrol
+perf
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
