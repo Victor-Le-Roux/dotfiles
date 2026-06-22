@@ -1,6 +1,7 @@
 7zip
 alsa-plugins
 alsa-utils
+amd-ucode
 android-tools
 arandr
 arch-audit
@@ -98,11 +99,10 @@ lib32-giflib
 lib32-gnutls
 lib32-libpulse
 lib32-mpg123
-lib32-nvidia-utils
 lib32-openal
 lib32-v4l-utils
+lib32-vulkan-radeon
 libayatana-appindicator
-libva-nvidia-driver-git
 light
 linux
 linux-firmware
@@ -135,8 +135,6 @@ noto-fonts
 noto-fonts-emoji
 npm
 ntfs-3g
-nvidia-open
-nvidia-settings
 nvme-cli
 nvtop
 os-prober
@@ -226,6 +224,7 @@ vim
 vlc
 volumeicon
 vscodium-bin
+vulkan-radeon
 vulkan-tools
 wakeonlan
 waybar
@@ -240,8 +239,6 @@ xdelta3
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-user-dirs
-xf86-video-nouveau
-xf86-video-vesa
 xorg-bdftopcf
 xorg-docs
 xorg-font-util
