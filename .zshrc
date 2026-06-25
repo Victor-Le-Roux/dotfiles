@@ -176,3 +176,5 @@ frg() {
 # -------------------------------------------------------------
 # fastfetch is now in ~/.zlogin to avoid getting cleared by starship/zsh init
 export PATH="/home/victor/.npm-global/bin:$PATH"
+
+export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"

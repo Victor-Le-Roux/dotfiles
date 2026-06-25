@@ -23,6 +23,7 @@ btop
 calibre-bin
 cbindgen
 ccache
+chromaprint
 chromium
 clang
 cliphist
@@ -145,6 +146,7 @@ papirus-icon-theme
 paru
 pavucontrol
 perf
+perl-image-exiftool
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
@@ -159,6 +161,7 @@ pyenv
 python-dbus-next
 python-distutils-extra
 python-pip
+python-pipx
 python-pyclip
 python-pywal
 python-virtualenv
@@ -229,6 +232,7 @@ vulkan-tools
 wakeonlan
 waybar
 wev
+whois
 wireplumber
 wl-clipboard
 wlogout
