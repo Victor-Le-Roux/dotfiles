@@ -616,14 +616,6 @@ require("lazy").setup({
     },
   },
   {
-    "m4xshen/hardtime.nvim",
-    event = "VeryLazy",
-    dependencies = {
-      { "MunifTanjim/nui.nvim" },
-    },
-    opts = {},
-  },
-  {
     "tris203/precognition.nvim",
     event = "VeryLazy",
     cmd = { "Precognition" },

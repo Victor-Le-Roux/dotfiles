@@ -100,7 +100,6 @@ alias hr='cd ~/.config/hypr'
 alias nvim_config='cd ~/.config/nvim'
 
 # Editor
-alias vim='nvim'
 
 # Contrôle Spotify personnalisé
 alias middle_of_the_song='$HOME/my_personnal_spotify_config/spotify_control_terminal.sh 1'
