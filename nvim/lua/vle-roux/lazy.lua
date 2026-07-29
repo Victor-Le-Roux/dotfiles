@@ -24,14 +24,40 @@ local function lualine_word_count()
   return tostring(count) .. " words"
 end
 
+local function switch_source_header(bufnr)
+  local client = vim.lsp.get_clients({ bufnr = bufnr, name = "clangd" })[1]
+  local method = "textDocument/switchSourceHeader"
+  if not client or not client:supports_method(method) then
+    vim.notify("clangd ne prend pas en charge le passage source/en-tête", vim.log.levels.WARN)
+    return
+  end
+
+  local params = vim.lsp.util.make_text_document_params(bufnr)
+  client:request(method, params, function(err, result)
+    if err then
+      vim.notify(tostring(err), vim.log.levels.ERROR)
+      return
+    end
+    if not result then
+      vim.notify("Aucun fichier source/en-tête correspondant", vim.log.levels.WARN)
+      return
+    end
+    vim.cmd.edit(vim.uri_to_fname(result))
+  end, bufnr)
+end
+
 require("lazy").setup({
+  {
+    "williamboman/mason.nvim",
+    cmd = { "Mason", "MasonUpdate", "MasonInstall", "MasonUninstall" },
+    opts = {},
+  },
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       { "williamboman/mason.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
-      { "jay-babu/mason-nvim-dap.nvim" },
       { "nvimtools/none-ls.nvim" },
       { "jay-babu/mason-null-ls.nvim" },
       { "hrsh7th/nvim-cmp" },
@@ -92,6 +118,13 @@ require("lazy").setup({
         nnoremap("<leader>fr", vim.lsp.buf.references, opts)
         nnoremap("<leader>ff", vim.lsp.buf.definition, opts)
         nnoremap("<leader>fF", vim.lsp.buf.declaration, opts)
+        nnoremap("<leader>fs", "<Cmd>Telescope lsp_dynamic_workspace_symbols<CR>", opts)
+        nnoremap("<leader>fd", "<Cmd>Telescope diagnostics bufnr=0<CR>", opts)
+        nnoremap("<leader>fh", function()
+          switch_source_header(bufnr)
+        end, opts)
+        nnoremap("<leader>fci", vim.lsp.buf.incoming_calls, opts)
+        nnoremap("<leader>fco", vim.lsp.buf.outgoing_calls, opts)
         nnoremap("K", vim.lsp.buf.hover, opts)
         inoremap("<C-h>", vim.lsp.buf.signature_help, opts)
         inoremap("<C-j>", vim.lsp.buf.signature_help, opts)
@@ -109,11 +142,12 @@ require("lazy").setup({
             end or nil,
           })
         end, opts)
+
       end
 
       local clangd_capabilities = vim.tbl_deep_extend("force", capabilities, {
-        offsetEncoding = "utf-8",
-        offset_encoding = "utf-8",
+        offsetEncoding = { "utf-8", "utf-16" },
+        offset_encoding = { "utf-8", "utf-16" },
       })
 
       vim.lsp.config("*", {
@@ -121,38 +155,49 @@ require("lazy").setup({
         capabilities = capabilities,
       })
       vim.lsp.config("clangd", {
+        cmd = {
+          require("vle-roux.c_tools").clangd_command(),
+          "--background-index",
+          "--clang-tidy",
+          "--completion-style=detailed",
+        },
+        root_markers = {
+          ".clangd",
+          ".clang-tidy",
+          ".clang-format",
+          "compile_commands.json",
+          "compile_flags.txt",
+          "CMakePresets.json",
+          "CMakeLists.txt",
+          "Makefile",
+          "makefile",
+          ".git",
+        },
         on_attach = on_attach,
         capabilities = clangd_capabilities,
       })
 
-      require("mason").setup()
       mason_lspconfig.setup({
-        ensure_installed = { "clangd" },
+        ensure_installed = {},
         automatic_enable = false,
       })
 
+      local enabled_servers = {}
       for _, server_name in ipairs(mason_lspconfig.get_installed_servers()) do
+        enabled_servers[server_name] = true
+      end
+      for server_name, executable in pairs({ clangd = "clangd", gopls = "gopls", pylsp = "pylsp" }) do
+        if vim.fn.executable(executable) == 1 then
+          enabled_servers[server_name] = true
+        end
+      end
+      for server_name in pairs(enabled_servers) do
         vim.lsp.enable(server_name)
       end
-
-      require("mason-nvim-dap").setup({
-        ensure_installed = { "python", "codelldb" },
-        automatic_installation = true,
-        handlers = {
-          function(config)
-            require("mason-nvim-dap").default_setup(config)
-          end,
-        },
-      })
 
       local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
       cmp.setup({
-        performance = {
-          debounce = 0,
-          throttle = 0,
-          confirm_resolve_timeout = 0,
-        },
         preselect = cmp.PreselectMode.None,
         snippet = {
           expand = function(args)
@@ -192,9 +237,14 @@ require("lazy").setup({
         }),
       }
 
+      local null_sources = {}
+      if vim.fn.executable("txt-format") == 1 then
+        table.insert(null_sources, txt_formatter)
+      end
+
       null_ls.setup({
         on_attach = on_attach,
-        sources = { txt_formatter },
+        sources = null_sources,
       })
 
       require("mason-null-ls").setup({
@@ -243,24 +293,6 @@ require("lazy").setup({
     end,
   },
   { "kylechui/nvim-surround", event = "VeryLazy", opts = {} },
-  {
-    "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
-    event = { "BufReadPost", "BufNewFile" },
-    dependencies = {
-      { "windwp/nvim-ts-autotag" },
-      { "nvim-treesitter/nvim-treesitter-context" },
-    },
-    config = function()
-      require("nvim-treesitter.configs").setup({
-        ensure_installed = { "c", "cpp", "markdown", "markdown_inline" },
-        highlight = { enable = true },
-        indent = { enable = true },
-        autotag = { enable = true },
-      })
-      require("treesitter-context").setup({})
-    end,
-  },
   { "tikhomirov/vim-glsl", ft = { "glsl", "vert", "frag", "tesc", "tese", "geom", "comp" } },
 
   {
@@ -438,6 +470,119 @@ require("lazy").setup({
   {
     "nvim-telescope/telescope.nvim",
     cmd = { "Telescope" },
+    init = function()
+      local group = vim.api.nvim_create_augroup("vle_startup_file_picker", { clear = true })
+
+      local function allowed_directories()
+        local directories = {}
+        local seen = {}
+
+        for _, path in ipairs(vim.split(vim.env.NVIM_SEARCH_DIRS or "", ":", { plain = true, trimempty = true })) do
+          path = vim.fs.normalize(vim.fn.expand(path))
+          if vim.fn.isdirectory(path) == 1 and not seen[path] then
+            seen[path] = true
+            directories[#directories + 1] = path
+          end
+        end
+
+        return directories
+      end
+
+      local function is_allowed(path, roots)
+        path = vim.fs.normalize(path)
+        for _, root in ipairs(roots) do
+          if root == "/" or path == root or vim.startswith(path, root .. "/") then
+            return true
+          end
+        end
+        return false
+      end
+
+      local function open_allowed_files(directories)
+        require("lazy").load({ plugins = { "telescope.nvim" } })
+
+        local options = { hidden = true, prompt_title = "Dossiers autorisés" }
+        if #directories == 1 then
+          options.cwd = directories[1]
+        else
+          options.find_command = { "find" }
+          vim.list_extend(options.find_command, directories)
+          vim.list_extend(options.find_command, {
+            "-type",
+            "d",
+            "(",
+            "-name",
+            ".git",
+            "-o",
+            "-name",
+            "node_modules",
+            "-o",
+            "-name",
+            "build",
+            ")",
+            "-prune",
+            "-o",
+            "-type",
+            "f",
+            "-print",
+          })
+        end
+
+        require("telescope.builtin").find_files(options)
+      end
+
+      vim.api.nvim_create_autocmd("VimEnter", {
+        group = group,
+        once = true,
+        callback = function()
+          if #vim.api.nvim_list_uis() == 0 then
+            return
+          end
+
+          local directories = allowed_directories()
+          if #directories == 0 then
+            vim.notify(
+              "Aucun dossier autorisé. Configure TZF_SEARCH_DIRS puis recharge ~/.zshrc.",
+              vim.log.levels.WARN
+            )
+            return
+          end
+
+          local directory_argument = false
+          if vim.fn.argc() == 1 then
+            local argument = vim.fn.argv(0)
+            if vim.fn.isdirectory(argument) == 1 then
+              local directory = vim.fs.normalize(vim.fn.fnamemodify(argument, ":p"))
+              directory_argument = true
+              if is_allowed(directory, directories) then
+                directories = { directory }
+                vim.api.nvim_set_current_dir(directory)
+              else
+                vim.notify(
+                  "Dossier hors des racines autorisées : recherche limitée à NVIM_SEARCH_DIRS.",
+                  vim.log.levels.WARN
+                )
+              end
+            else
+              return
+            end
+          elseif vim.fn.argc() > 1 then
+            return
+          end
+
+          if directory_argument then
+            local directory_buffer = vim.api.nvim_get_current_buf()
+            vim.cmd.enew()
+            pcall(vim.api.nvim_buf_delete, directory_buffer, { force = true })
+          end
+
+          vim.schedule(function()
+            open_allowed_files(directories)
+          end)
+        end,
+        desc = "Open the fuzzy file picker when Neovim starts without a file",
+      })
+    end,
     keys = {
       {
         "<leader>p",
@@ -460,7 +605,6 @@ require("lazy").setup({
     },
     dependencies = {
       { "nvim-lua/plenary.nvim" },
-      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
       { "kdheepak/lazygit.nvim" },
     },
     config = function()
@@ -519,20 +663,55 @@ require("lazy").setup({
         },
       })
 
-      pcall(telescope.load_extension, "fzf")
-      pcall(telescope.load_extension, "lazygit")
+      if vim.fn.executable("lazygit") == 1 then
+        pcall(telescope.load_extension, "lazygit")
+      end
       pcall(telescope.load_extension, "noice")
     end,
   },
   {
     "nvim-telescope/telescope-dap.nvim",
     dependencies = { "mfussenegger/nvim-dap", "nvim-telescope/telescope.nvim" },
-    cmd = { "Telescope" },
+    keys = {
+      { "<leader>df", "<Cmd>Telescope dap frames<CR>", desc = "DAP frames" },
+      { "<leader>dl", "<Cmd>Telescope dap list_breakpoints<CR>", desc = "DAP breakpoints" },
+    },
+    config = function()
+      require("telescope").load_extension("dap")
+    end,
   },
 
   { "lewis6991/gitsigns.nvim", event = { "BufReadPre", "BufNewFile" }, opts = {} },
   {
+    "stevearc/overseer.nvim",
+    cmd = {
+      "OverseerRun",
+      "OverseerOpen",
+      "OverseerClose",
+      "OverseerToggle",
+      "OverseerShell",
+      "OverseerTaskAction",
+    },
+    opts = {
+      task_list = {
+        direction = "bottom",
+        min_height = 10,
+        max_height = 20,
+      },
+    },
+  },
+  {
     "mfussenegger/nvim-dap",
+    dependencies = {
+      {
+        "jay-babu/mason-nvim-dap.nvim",
+        dependencies = { "williamboman/mason.nvim" },
+      },
+      {
+        "rcarriga/nvim-dap-ui",
+        dependencies = { "nvim-neotest/nvim-nio" },
+      },
+    },
     cmd = {
       "DapContinue",
       "DapToggleBreakpoint",
@@ -543,11 +722,137 @@ require("lazy").setup({
       "DapRunToCursor",
       "DapClearBreakpoints",
     },
-  },
-  {
-    "rcarriga/nvim-dap-ui",
-    dependencies = { "mfussenegger/nvim-dap" },
-    cmd = { "DapUIOpen", "DapUIClose", "DapUIToggle" },
+    keys = {
+      {
+        "<F5>",
+        function()
+          require("dap").continue()
+        end,
+        desc = "DAP continue",
+      },
+      {
+        "<F9>",
+        function()
+          require("dap").toggle_breakpoint()
+        end,
+        desc = "DAP toggle breakpoint",
+      },
+      {
+        "<F10>",
+        function()
+          require("dap").step_over()
+        end,
+        desc = "DAP step over",
+      },
+      {
+        "<F11>",
+        function()
+          require("dap").step_into()
+        end,
+        desc = "DAP step into",
+      },
+      {
+        "<F12>",
+        function()
+          require("dap").step_out()
+        end,
+        desc = "DAP step out",
+      },
+      {
+        "<leader>da",
+        function()
+          local dap = require("dap")
+          for _, config in ipairs(dap.configurations[vim.bo.filetype] or {}) do
+            if config.request == "attach" then
+              dap.run(config)
+              return
+            end
+          end
+          vim.notify("Aucune configuration DAP attach pour ce langage", vim.log.levels.WARN)
+        end,
+        desc = "DAP attach",
+      },
+      {
+        "<leader>db",
+        function()
+          require("dap").toggle_breakpoint()
+        end,
+        desc = "DAP toggle breakpoint",
+      },
+      {
+        "<leader>dc",
+        function()
+          require("dap").continue()
+        end,
+        desc = "DAP continue",
+      },
+      {
+        "<leader>dr",
+        function()
+          require("dap").repl.open()
+        end,
+        desc = "DAP REPL",
+      },
+      {
+        "<leader>dt",
+        function()
+          require("dap").terminate()
+        end,
+        desc = "DAP terminate",
+      },
+      {
+        "<leader>du",
+        function()
+          require("dapui").toggle()
+        end,
+        desc = "DAP UI",
+      },
+    },
+    config = function()
+      local dap = require("dap")
+      local dapui = require("dapui")
+
+      require("mason-nvim-dap").setup({
+        ensure_installed = { "codelldb" },
+        automatic_installation = false,
+        handlers = {
+          function(config)
+            require("mason-nvim-dap").default_setup(config)
+          end,
+        },
+      })
+
+      local attach = {
+        type = "codelldb",
+        request = "attach",
+        name = "LLDB: Attach to process",
+        pid = require("dap.utils").pick_process,
+        cwd = "${workspaceFolder}",
+      }
+      for _, filetype in ipairs({ "c", "cpp" }) do
+        dap.configurations[filetype] = dap.configurations[filetype] or {}
+        local has_attach = vim.iter(dap.configurations[filetype]):any(function(config)
+          return config.type == "codelldb" and config.request == "attach"
+        end)
+        if not has_attach then
+          table.insert(dap.configurations[filetype], attach)
+        end
+      end
+
+      dapui.setup()
+      dap.listeners.before.attach.dapui_config = function()
+        dapui.open()
+      end
+      dap.listeners.before.launch.dapui_config = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated.dapui_config = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited.dapui_config = function()
+        dapui.close()
+      end
+    end,
   },
 
   { "kevinhwang91/nvim-bqf", ft = "qf", opts = {} },

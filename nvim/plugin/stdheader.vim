@@ -132,6 +132,7 @@ function! s:update()
 			call setline(9, s:line(9))
 		endif
 		call setline(4, s:line(4))
+		call setline(6, s:line(6))
 		return 0
 	endif
 	return 1

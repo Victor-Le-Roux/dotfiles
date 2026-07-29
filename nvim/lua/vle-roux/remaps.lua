@@ -18,12 +18,22 @@ nnoremap("<C-u>", "<C-u>zz")
 nnoremap("n", "nzzzv")
 nnoremap("N", "Nzzzv")
 nnoremap("<C-f>", function()
-  if not vim.env.TMUX then
-    vim.notify("tmux not detected", vim.log.levels.WARN)
+  if vim.fn.executable("tmux") ~= 1 or not vim.env.TMUX then
+    vim.cmd("botright split | terminal")
+    vim.cmd("resize 15")
+    vim.cmd("startinsert")
     return
   end
+
   local cwd = vim.fn.getcwd()
-  vim.fn.jobstart({ "tmux", "new-window", "-c", cwd, "/home/victor/.local/bin/tmux-sessionizer" }, { detach = true })
+  local sessionizer = vim.fn.expand("~/.local/bin/tmux-sessionizer")
+  local command = { "tmux", "new-window", "-c", cwd }
+
+  if vim.fn.executable(sessionizer) == 1 then
+    table.insert(command, sessionizer)
+  end
+
+  vim.fn.jobstart(command, { detach = true })
 end, { silent = true })
 xnoremap(
   "n",
@@ -39,7 +49,16 @@ xnoremap("<leader>d", "\"_d")
 
 -- built in terminal
 nnoremap("<leader>t", "<Cmd>sp<CR> <Cmd>term<CR> <Cmd>resize 15N<CR> i", silent)
-tnoremap("<C-c><C-c>", "<C-\\><C-n>", silent)
+tnoremap("<C-j>", function()
+  vim.cmd("wincmd j")
+end, { silent = true, desc = "Terminal: lower window" })
+tnoremap("<C-k>", function()
+  vim.cmd("wincmd k")
+end, { silent = true, desc = "Terminal: upper window" })
+tnoremap("<C-x>", "<C-\\><C-n>", { silent = true, desc = "Terminal normal mode" })
+tnoremap("<C-q>", function()
+  vim.api.nvim_buf_delete(0, { force = true })
+end, { silent = true, desc = "Close terminal" })
 -- nnoremap("<leader>cb", "<Cmd>make<CR>")
 -- tnoremap("<D-v>", function()
 --   local keys = vim.api.nvim_replace_termcodes("<C-\\><C-n>\"+pi", true, false, true)
@@ -56,28 +75,11 @@ nnoremap("<leader>vM", "<Cmd>MarkdownPreviewRefresh<CR>", { silent = true, desc 
 -- nnoremap("<leader><C-o>", "<Cmd>!open %<CR><CR>", silent)
 nnoremap("J", "mzJ`z")
 xnoremap("J", "mzJ`z")
-tnoremap("<Esc><Esc>", "<C-\\><C-n>")
-local function find_project_root()
-  local path = vim.api.nvim_buf_get_name(0)
-  if path == "" then
-    path = vim.loop.cwd()
-  end
-
-  local markers = { "Makefile", "makefile", "compile_commands.json", "CMakeLists.txt", ".git" }
-  local found = vim.fs.find(markers, { path = path, upward = true })
-  if #found == 0 then
-    return vim.loop.cwd()
-  end
-
-  return vim.fs.dirname(found[1])
-end
-
-nnoremap("<leader>cb", function()
-  local root = find_project_root()
-  vim.cmd("lcd " .. vim.fn.fnameescape(root))
-  vim.cmd("make")
-  vim.cmd("botright cwindow")
-end)
+nnoremap("<leader>cb", "<Cmd>Build<CR>", { silent = true, desc = "Build project" })
+nnoremap("<leader>cc", "<Cmd>CConfigure<CR>", { silent = true, desc = "Configure CMake project" })
+nnoremap("<leader>ct", "<Cmd>CTest<CR>", { silent = true, desc = "Run CTest" })
+nnoremap("<leader>cr", "<Cmd>Run<CR>", { silent = true, desc = "Run program" })
+nnoremap("<leader>co", "<Cmd>OverseerToggle<CR>", { silent = true, desc = "Toggle task list" })
 
 inoremap("<Down>", "<Nop>")
 inoremap("<Left>", "<Nop>")

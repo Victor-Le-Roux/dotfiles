@@ -26,8 +26,44 @@ local run_commands = {
   javascript = "node %",
 }
 
+local required_commands = {
+  c = "gcc",
+  cpp = "g++",
+  rust = "cargo",
+  go = "go",
+  javascript = "node",
+}
+
+local c_tools = require("vle-roux.c_tools")
+c_tools.setup()
+
+local function has_required_command(filetype)
+  local command = required_commands[filetype]
+  if not command or vim.fn.executable(command) == 1 then
+    return true
+  end
+
+  vim.notify("Commande indisponible : " .. command, vim.log.levels.WARN)
+  return false
+end
+
+local function run_terminal(command)
+  vim.cmd("sp")
+  vim.cmd("terminal " .. command)
+  vim.cmd("resize 20N")
+  vim.cmd("startinsert")
+end
+
 vim.api.nvim_create_user_command("Build", function()
   local filetype = vim.bo.filetype
+
+  if (filetype == "c" or filetype == "cpp") and c_tools.build() then
+    return
+  end
+
+  if not has_required_command(filetype) then
+    return
+  end
 
   for file, command in pairs(build_commands) do
     if filetype == file then
@@ -40,6 +76,15 @@ end, {})
 vim.api.nvim_create_user_command("DebugBuild", function()
   local filetype = vim.bo.filetype
 
+  if (filetype == "c" or filetype == "cpp") and c_tools.build() then
+    vim.notify("Le mode Debug doit être défini par CMake/Make pour un projet.", vim.log.levels.INFO)
+    return
+  end
+
+  if not has_required_command(filetype) then
+    return
+  end
+
   for file, command in pairs(debug_build_commands) do
     if filetype == file then
       vim.cmd(command)
@@ -51,19 +96,40 @@ end, {})
 vim.api.nvim_create_user_command("Run", function()
   local filetype = vim.bo.filetype
 
+  local fallback_executable = c_tools.fallback_executable()
+  if fallback_executable then
+    if vim.fn.executable(fallback_executable) ~= 1 then
+      vim.notify("Exécutable absent. Lance :Build avant :Run.", vim.log.levels.WARN)
+      return
+    end
+    run_terminal(vim.fn.shellescape(fallback_executable))
+    return
+  end
+
+  if (filetype == "c" or filetype == "cpp") and c_tools.project_root() then
+    c_tools.open_task_picker()
+    return
+  end
+
+  if not has_required_command(filetype) then
+    return
+  end
+
   for file, command in pairs(run_commands) do
     if filetype == file then
-      vim.cmd("sp")
-      vim.cmd("term " .. command)
-      vim.cmd("resize 20N")
-      local keys = vim.api.nvim_replace_termcodes("i", true, false, true)
-      vim.api.nvim_feedkeys(keys, "n", false)
+      run_terminal(command)
       break
     end
   end
 end, {})
 
 vim.api.nvim_create_user_command("Ha", function()
+  if c_tools.is_c_family() and c_tools.project_root() then
+    c_tools.build()
+    vim.notify("Build lancé. Utilise :OverseerRun ou DAP pour exécuter la cible.", vim.log.levels.INFO)
+    return
+  end
+
   vim.cmd([[Build]])
   vim.cmd([[Run]])
 end, {})
@@ -71,8 +137,12 @@ end, {})
 vim.api.nvim_create_user_command("Config", function() vim.cmd([[cd ~/.config/nvim]]) end, {})
 
 vim.api.nvim_create_user_command("UpdateAll", function()
-  vim.cmd([[TSUpdateSync]])
-  vim.cmd([[MasonUpdate]])
+  if vim.fn.exists(":TSUpdateSync") == 2 then
+    vim.cmd([[TSUpdateSync]])
+  end
+  if vim.fn.exists(":MasonUpdate") == 2 then
+    vim.cmd([[MasonUpdate]])
+  end
 end, {})
 
 vim.g.vle_word_count_enabled = false

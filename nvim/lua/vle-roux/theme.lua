@@ -54,6 +54,36 @@ local function pick_ui_palette(kitty, light_theme)
   }
 end
 
+local function pick_syntax_palette(kitty, light_theme)
+  if light_theme then
+    return {
+      text = kitty.foreground or "#0a0d14",
+      comment = kitty.color15 or "#58524a",
+      keyword = kitty.color1 or "#8a2210",
+      type = kitty.color4 or "#135a6a",
+      func = kitty.color6 or "#1e6058",
+      string = kitty.color2 or "#2d5520",
+      number = kitty.color5 or "#55284a",
+      constant = kitty.color3 or "#866428",
+      preproc = kitty.color13 or "#6b3a5c",
+      special = kitty.color12 or "#1a6e7d",
+    }
+  end
+
+  return {
+    text = kitty.foreground or "#e0def4",
+    comment = kitty.color15 or "#908caa",
+    keyword = kitty.color9 or "#eb6f92",
+    type = kitty.color12 or "#9ccfd8",
+    func = kitty.color14 or "#9ccfd8",
+    string = kitty.color10 or "#9ccfd8",
+    number = kitty.color13 or "#c4a7e7",
+    constant = kitty.color11 or "#f6c177",
+    preproc = kitty.color13 or "#c4a7e7",
+    special = kitty.color14 or "#9ccfd8",
+  }
+end
+
 local function set_hl(group, value)
   vim.api.nvim_set_hl(0, group, value)
 end
@@ -69,6 +99,8 @@ local function apply_ui_colors(ui)
   set_hl("ColorColumn", { bg = ui.selection })
   set_hl("EndOfBuffer", { fg = ui.bg, bg = ui.bg })
   set_hl("NonText", { fg = ui.muted, bg = ui.bg })
+  set_hl("Whitespace", { fg = ui.border, bg = ui.bg })
+  set_hl("SpecialKey", { fg = ui.border, bg = ui.bg })
   set_hl("WinSeparator", { fg = ui.border, bg = ui.bg })
   set_hl("VertSplit", { fg = ui.border, bg = ui.bg })
   set_hl("StatusLine", { fg = ui.fg, bg = ui.panel })
@@ -102,6 +134,101 @@ local function apply_ui_colors(ui)
   set_hl("TelescopeSelection", { bg = ui.selection })
 end
 
+local function apply_syntax_colors(syntax)
+  -- Keep code readable on the system's light background while reusing the
+  -- terminal palette. The same roles are shared by Vim syntax, Treesitter and
+  -- clangd semantic tokens, so C files stay consistent whichever highlighter
+  -- provides a token.
+  set_hl("Comment", { fg = syntax.comment, italic = true })
+  set_hl("Constant", { fg = syntax.constant })
+  set_hl("String", { fg = syntax.string })
+  set_hl("Character", { fg = syntax.string })
+  set_hl("Number", { fg = syntax.number })
+  set_hl("Float", { fg = syntax.number })
+  set_hl("Boolean", { fg = syntax.constant, bold = true })
+  set_hl("Identifier", { fg = syntax.text })
+  set_hl("Function", { fg = syntax.func, bold = true })
+  set_hl("Statement", { fg = syntax.keyword, bold = true })
+  set_hl("Conditional", { fg = syntax.keyword, bold = true })
+  set_hl("Repeat", { fg = syntax.keyword, bold = true })
+  set_hl("Label", { fg = syntax.constant })
+  set_hl("Operator", { fg = syntax.keyword })
+  set_hl("Keyword", { fg = syntax.keyword, bold = true })
+  set_hl("Exception", { fg = syntax.keyword, bold = true })
+  set_hl("PreProc", { fg = syntax.preproc })
+  set_hl("Include", { fg = syntax.preproc, bold = true })
+  set_hl("Define", { fg = syntax.preproc, bold = true })
+  set_hl("Macro", { fg = syntax.preproc, bold = true })
+  set_hl("PreCondit", { fg = syntax.preproc })
+  set_hl("Type", { fg = syntax.type, bold = true })
+  set_hl("StorageClass", { fg = syntax.preproc })
+  set_hl("Structure", { fg = syntax.type, bold = true })
+  set_hl("Typedef", { fg = syntax.type, bold = true })
+  set_hl("Special", { fg = syntax.special })
+  set_hl("SpecialChar", { fg = syntax.special, bold = true })
+
+  local treesitter_groups = {
+    ["@variable"] = { fg = syntax.text },
+    ["@variable.builtin"] = { fg = syntax.keyword, italic = true },
+    ["@variable.parameter"] = { fg = syntax.constant },
+    ["@constant"] = { fg = syntax.constant },
+    ["@constant.builtin"] = { fg = syntax.constant, bold = true },
+    ["@string"] = { fg = syntax.string },
+    ["@string.escape"] = { fg = syntax.special, bold = true },
+    ["@character"] = { fg = syntax.string },
+    ["@number"] = { fg = syntax.number },
+    ["@number.float"] = { fg = syntax.number },
+    ["@boolean"] = { fg = syntax.constant, bold = true },
+    ["@type"] = { fg = syntax.type, bold = true },
+    ["@type.builtin"] = { fg = syntax.type, bold = true },
+    ["@attribute"] = { fg = syntax.preproc },
+    ["@property"] = { fg = syntax.text },
+    ["@function"] = { fg = syntax.func, bold = true },
+    ["@function.call"] = { fg = syntax.func },
+    ["@function.builtin"] = { fg = syntax.func, bold = true },
+    ["@function.macro"] = { fg = syntax.preproc, bold = true },
+    ["@constructor"] = { fg = syntax.type, bold = true },
+    ["@operator"] = { fg = syntax.keyword },
+    ["@keyword"] = { fg = syntax.keyword, bold = true },
+    ["@keyword.return"] = { fg = syntax.keyword, bold = true },
+    ["@keyword.conditional"] = { fg = syntax.keyword, bold = true },
+    ["@keyword.repeat"] = { fg = syntax.keyword, bold = true },
+    ["@keyword.directive"] = { fg = syntax.preproc, bold = true },
+    ["@label"] = { fg = syntax.constant },
+    ["@comment"] = { fg = syntax.comment, italic = true },
+  }
+
+  for group, value in pairs(treesitter_groups) do
+    set_hl(group, value)
+  end
+
+  local semantic_groups = {
+    namespace = { fg = syntax.type },
+    type = { fg = syntax.type, bold = true },
+    class = { fg = syntax.type, bold = true },
+    enum = { fg = syntax.type, bold = true },
+    interface = { fg = syntax.type, bold = true },
+    struct = { fg = syntax.type, bold = true },
+    typeParameter = { fg = syntax.type },
+    parameter = { fg = syntax.constant },
+    variable = { fg = syntax.text },
+    property = { fg = syntax.text },
+    enumMember = { fg = syntax.constant, bold = true },
+    ["function"] = { fg = syntax.func, bold = true },
+    method = { fg = syntax.func, bold = true },
+    macro = { fg = syntax.preproc, bold = true },
+    modifier = { fg = syntax.keyword },
+    comment = { fg = syntax.comment, italic = true },
+    string = { fg = syntax.string },
+    number = { fg = syntax.number },
+    operator = { fg = syntax.keyword },
+  }
+
+  for token, value in pairs(semantic_groups) do
+    set_hl("@lsp.type." .. token, value)
+  end
+end
+
 function M.setup()
   local kitty = read_kitty_palette()
   local light_theme = true
@@ -114,6 +241,7 @@ function M.setup()
     vim.o.background = light_theme and "light" or "dark"
     vim.cmd("colorscheme habamax")
     apply_ui_colors(pick_ui_palette(kitty, light_theme))
+    apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
     return
   end
 
@@ -138,6 +266,7 @@ function M.setup()
 
   vim.cmd("colorscheme rose-pine")
   apply_ui_colors(pick_ui_palette(kitty, light_theme))
+  apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
 end
 
 return M

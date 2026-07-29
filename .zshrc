@@ -24,7 +24,55 @@ pathprepend() {
     *) PATH="$1:$PATH" ;;
   esac
 }
+cdf()
+{
+	local file
 
+	file=$(find . -type f 2>/dev/null | fzf) || return
+	cd "$(dirname "$file")" || return
+}
+
+# Racines parcourues par `tzf`. Ajoute ou retire ici les dossiers autorisés.
+typeset -ga TZF_SEARCH_DIRS=(
+  "$HOME/personal_project/42-Piscine-retry/"
+)
+# Liste partagée avec le sélecteur de fichiers lancé par Neovim.
+export NVIM_SEARCH_DIRS="${(j/:/)TZF_SEARCH_DIRS}"
+
+# Cherche un fichier dans les racines configurées, puis rejoint son dossier.
+# Des arguments remplacent temporairement la liste : `tzf ~/projet-a ~/projet-b`.
+t() {
+  emulate -L zsh
+  local root selected
+  local -a requested_roots valid_roots
+
+  if (( $# > 0 )); then
+    requested_roots=("$@")
+  else
+    requested_roots=("${TZF_SEARCH_DIRS[@]}")
+  fi
+
+  for root in "${requested_roots[@]}"; do
+    if [[ -d "$root" ]]; then
+      valid_roots+=("${root:A}")
+    else
+      print -u2 -- "tzf : dossier ignoré car introuvable : $root"
+    fi
+  done
+
+  if (( ${#valid_roots[@]} == 0 )); then
+    print -u2 -- "tzf : aucun dossier de recherche valide"
+    return 1
+  fi
+
+  selected="$(
+    find "${valid_roots[@]}" \
+      -type d \( -name .git -o -name node_modules -o -name build \) -prune \
+      -o -type f -print 2>/dev/null | fzf
+  )" || return
+  [[ -n "$selected" ]] || return
+  cd "${selected:h}"
+}
 # Override de la commande `cd` pour activer un venv local
 function cd() {
   emulate -L zsh

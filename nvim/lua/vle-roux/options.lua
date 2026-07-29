@@ -1,8 +1,11 @@
  local options = {
    autoindent = true,
    smartindent = true,
+   expandtab = false,
    tabstop = 4,
-   shiftwidth = 2,
+   softtabstop = 4,
+   shiftwidth = 4,
+   list = true,
    showtabline = 0,
  
    number = true,
@@ -35,10 +38,17 @@
    undofile = true,
  
  --  colorcolumn = "80",
-   updatetime = 20,
+   updatetime = 250,
    scrolloff = 15,
    mouse = "",
    guicursor = "a:block",
+
+   listchars = {
+     tab = "→ ",
+     space = "·",
+     trail = "×",
+     nbsp = "␣",
+   },
  
    title = true,
    -- titlestring = "%t - Wvim",
@@ -57,3 +67,7 @@
  end
 
 vim.g.skip_ts_context_commentstring_module = true
+
+-- The built-in C syntax leaves function names unstyled unless this is enabled.
+-- clangd may refine them later through semantic highlighting.
+vim.g.c_functions = true
