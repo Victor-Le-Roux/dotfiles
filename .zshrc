@@ -149,6 +149,16 @@ alias nvim_config='cd ~/.config/nvim'
 
 # Editor
 
+# Formate un ou plusieurs fichiers C selon la Norme 42.
+# Usage : n fichier1.c fichier2.c
+n() {
+  if (( $# == 0 )); then
+    print -u2 -- "usage : n fichier1.c [fichier2.c ...]"
+    return 1
+  fi
+  c_formatter_42 "$@"
+}
+
 # Contrôle Spotify personnalisé
 alias middle_of_the_song='$HOME/my_personnal_spotify_config/spotify_control_terminal.sh 1'
 alias next_song='$HOME/my_personnal_spotify_config/spotify_control_terminal.sh 2'

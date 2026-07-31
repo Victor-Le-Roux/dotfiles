@@ -24,6 +24,16 @@ local function lualine_word_count()
   return tostring(count) .. " words"
 end
 
+local function visual_selection_active()
+  local mode = vim.fn.mode()
+  return mode == "v" or mode == "V" or mode == "\22"
+end
+
+local function lualine_visual_char_count()
+  local count = vim.fn.wordcount().visual_chars or 0
+  return tostring(count)
+end
+
 local function switch_source_header(bufnr)
   local client = vim.lsp.get_clients({ bufnr = bufnr, name = "clangd" })[1]
   local method = "textDocument/switchSourceHeader"
@@ -970,7 +980,14 @@ require("lazy").setup({
               end,
             },
           },
-          lualine_x = { "encoding", "filetype" },
+          lualine_x = {
+            {
+              lualine_visual_char_count,
+              cond = visual_selection_active,
+            },
+            "encoding",
+            "filetype",
+          },
           lualine_y = { "progress" },
           lualine_z = { "location" },
         },
