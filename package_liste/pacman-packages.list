@@ -48,6 +48,7 @@ ffmpegthumbnailer
 firefox
 fish
 flatpak
+foot
 fuse-overlayfs
 fzf
 gamemode
@@ -62,7 +63,6 @@ glances
 glew
 glfw
 glmark2
-glow
 gnome-keyring
 gnome-system-monitor
 gnome-themes-extra
@@ -76,7 +76,6 @@ gtk-engine-murrine
 gvfs
 gvfs-mtp
 hey-bin
-htop
 hypridle
 hyprland
 hyprlock
@@ -104,7 +103,6 @@ lib32-openal
 lib32-v4l-utils
 lib32-vulkan-radeon
 libayatana-appindicator
-light
 linux
 linux-firmware
 linux-headers
@@ -117,14 +115,12 @@ lzip
 mako
 man-pages
 mesa-utils
-mousepad
 mpv
 mpv-mpris
 mtools
 music-assistant-desktop
 nano
 nasm
-neofetch
 neovim
 network-manager-applet
 networkmanager
@@ -136,6 +132,7 @@ noto-fonts
 noto-fonts-emoji
 npm
 ntfs-3g
+nushell
 nvme-cli
 nvtop
 os-prober
@@ -152,9 +149,7 @@ pipewire-jack
 pipewire-pulse
 playerctl
 polkit-gnome
-polybar
 postgresql
-postman-bin
 prismlauncher
 pwgen
 pyenv
@@ -166,14 +161,11 @@ python-pyclip
 python-pywal
 python-virtualenv
 qalculate-gtk
-qt5ct
 qt6-wayland
 qt6ct
-ranger
 rar
 reflector
 ripgrep
-ristretto
 rkhunter
 rofi
 rsync
@@ -183,7 +175,6 @@ rust
 s-tui
 satty
 scrcpy
-screenkey
 sddm-git
 shellcheck
 signal-desktop
@@ -195,9 +186,6 @@ stress-ng
 sudo
 suwayomi-jui-bin
 suwayomi-server-bin
-swappy
-swayidle
-sxhkd
 syncthing
 tesseract-data-eng
 tesseract-data-fra
@@ -225,8 +213,6 @@ unzip
 valgrind
 vim
 vlc
-volumeicon
-vscodium-bin
 vulkan-radeon
 vulkan-tools
 wakeonlan
@@ -283,7 +269,6 @@ xorg-xwininfo
 xorg-xwud
 yad
 yasm
-yay
 ydotool
 yt-dlp
 zathura

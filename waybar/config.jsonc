@@ -30,7 +30,7 @@
     },
     "scroll-step": 5,
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
-    "on-scroll-up": "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-up": "wpctl set-volume -l 0.90 @DEFAULT_AUDIO_SINK@ 5%+",
     "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
   },
 
@@ -116,6 +116,8 @@
 
   "custom/aoc-rotate": {
     "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
+    "interval": 30,
+    "signal": 10,
     "return-type": "json",
     "format": "{text}",
     "tooltip": true,

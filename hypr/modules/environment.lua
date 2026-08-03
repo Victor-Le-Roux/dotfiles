@@ -1,0 +1,7 @@
+hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("TERMINAL", "ghostty")
+hl.env("TERMINAL_FALLBACK", "foot")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_STYLE_OVERRIDE", "Fusion")
+hl.env("__GL_VRR_ALLOWED", "0")

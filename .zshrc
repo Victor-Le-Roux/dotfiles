@@ -5,6 +5,9 @@
 # Préfixe PATH seulement si le chemin n’y est pas déjà présent
 export EDITOR=nvim
 export VISUAL=nvim
+export TERMINAL=ghostty
+export TERMINAL_FALLBACK=foot
+export PPROOT="$HOME/personal_project"
 typeset -gA CDMARKS=(
   ppc   "$PPROOT/projets/coding"
   ppw   "$PPROOT/projets/web"
@@ -114,8 +117,8 @@ export PATH  # rend la variable globale visible
 # -------------------------------------------------------------
 # 3.  Variables d’environnement diverses
 # -------------------------------------------------------------
-export ZSH="$HOME/.oh-my-zsh"
-export SYSTEMD_EDITOR="vim"
+export ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit"
+export SYSTEMD_EDITOR="nvim"
 export WLR_NO_HARDWARE_CURSORS=1
 export LIBVA_DRIVER_NAME="nvidia"
 export XDG_SESSION_TYPE="wayland"
@@ -124,21 +127,43 @@ export __GLX_VENDOR_LIBRARY_NAME="nvidia"
 export WLR_DRM_DEVICES="/dev/dri/card1:/dev/dri/card0"
 
 # -------------------------------------------------------------
-# 4.  Oh‑My‑Zsh
+# 4.  Zinit
 # -------------------------------------------------------------
-ZSH_THEME=""
-plugins=(
-  git
-  archlinux
-  zsh-autosuggestions
-  zsh-syntax-highlighting
-)
+if [[ -r "$ZINIT_HOME/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/zinit.zsh"
+  typeset -g ZINIT_ACTIVE=1
 
-source "$ZSH/oh-my-zsh.sh"
+  # Fonctions et alias ciblés d'Oh My Zsh, sans charger tout le framework.
+  zinit snippet OMZP::git
+  zinit snippet OMZP::archlinux
+  zinit light zsh-users/zsh-autosuggestions
+
+  autoload -Uz compinit
+  ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-${ZSH_VERSION}"
+  mkdir -p "${ZSH_COMPDUMP:h}"
+  compinit -d "$ZSH_COMPDUMP"
+  zinit cdreplay -q
+elif [[ -r "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]]; then
+  # Repli local si Zinit devient momentanément indisponible.
+  export ZSH="$HOME/.oh-my-zsh"
+  ZSH_THEME=""
+  plugins=(git archlinux zsh-autosuggestions zsh-syntax-highlighting)
+  source "$ZSH/oh-my-zsh.sh"
+else
+  print -u2 -- "zsh : Zinit et Oh My Zsh sont indisponibles"
+fi
 
 # Starship prompt
-export STARSHIP_CONFIG=~/.config/starship.toml
-eval "$(starship init zsh)"
+export STARSHIP_CONFIG="$HOME/.config/starship.toml"
+(( $+commands[starship] )) && eval "$(starship init zsh)"
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
+(( $+commands[direnv] )) && eval "$(direnv hook zsh)"
+
+# La coloration syntaxique doit rester le dernier greffon chargé par Zsh.
+if (( ${ZINIT_ACTIVE:-0} )); then
+  zinit light zsh-users/zsh-syntax-highlighting
+  unset ZINIT_ACTIVE
+fi
 
 # -------------------------------------------------------------
 # 5.  Alias généraux
@@ -172,7 +197,6 @@ alias temp='nvim -c '\''autocmd VimLeavePre * call delete(expand("%"))'\'' "$(mk
 # -------------------------------------------------------------
 # 6.  Projets personnels
 # -------------------------------------------------------------
-export PPROOT="$HOME/personal_project"
 
 # Racine
 alias pp='cd "$PPROOT"'

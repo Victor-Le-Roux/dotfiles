@@ -41,8 +41,8 @@ pos=$(playerctl metadata --format '{{position}}' 2>/dev/null)
 len=$(playerctl metadata --format '{{mpris:length}}' 2>/dev/null)
 bar=""
 if [ -n "$pos" ] && [ -n "$len" ] && [ "$len" -gt 0 ]; then
-    percent=$(echo "$pos * 100 / $len" | bc)
-    filled=$(echo "$percent * 15 / 100" | bc)
+    percent=$((pos * 100 / len))
+    filled=$((percent * 15 / 100))
     empty=$((15 - filled))
     
     for ((i=0; i<filled; i++)); do bar+="━"; done

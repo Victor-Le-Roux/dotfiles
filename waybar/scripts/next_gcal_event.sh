@@ -8,7 +8,7 @@ fi
 start_date=$(date +%Y-%m-%d)
 end_date=$(date -d "+30 days" +%Y-%m-%d)
 
-agenda_lines=$(LC_ALL=C gcalcli --nocolor agenda "${start_date}" "${end_date}" 2>/dev/null | \
+agenda_lines=$(LC_ALL=C timeout 20s gcalcli --nocolor agenda "${start_date}" "${end_date}" 2>/dev/null | \
   awk '/^[A-Za-z]{3} [A-Za-z]{3} [ 0-9]{1,2}[[:space:]]+[0-9]{2}:[0-9]{2}/ {print}')
 
 if [ -z "${agenda_lines}" ]; then
@@ -99,4 +99,5 @@ fi
 text="${rel} - ${time_exact}, ${short_title}"
 tooltip="Prochain rendez-vous: ${start_fmt} - ${title_clean}"
 
-echo "{\"text\":\"${text}\",\"tooltip\":\"${tooltip}\"}"
+jq -cn --arg text "${text}" --arg tooltip "${tooltip}" \
+  '{text: $text, tooltip: $tooltip}'
