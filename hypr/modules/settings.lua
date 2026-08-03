@@ -7,7 +7,6 @@ return {
         terminal = "ghostty",
         terminal_tmux = "ghostty -e tmux new -A -s main",
         terminal_fallback = "foot",
-        terminal_fish = "ghostty -e fish",
         terminal_nushell = "ghostty -e nu",
         file_manager = "thunar",
         launcher = home .. "/.config/rofi/launcher_2.sh",

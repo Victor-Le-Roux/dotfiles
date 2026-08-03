@@ -1,5 +1,6 @@
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("SHELL", "/usr/bin/fish")
 hl.env("TERMINAL", "ghostty")
 hl.env("TERMINAL_FALLBACK", "foot")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")

@@ -552,7 +552,7 @@ require("lazy").setup({
           local directories = allowed_directories()
           if #directories == 0 then
             vim.notify(
-              "Aucun dossier autorisé. Configure TZF_SEARCH_DIRS puis recharge ~/.zshrc.",
+              "Aucun dossier autorisé. Configure TZF_SEARCH_DIRS dans ~/.config/fish/config.fish puis recharge Fish.",
               vim.log.levels.WARN
             )
             return

@@ -66,6 +66,11 @@
    vim.opt[option] = value
  end
 
+local fish = vim.fn.exepath("fish")
+if fish ~= "" then
+  vim.opt.shell = fish
+end
+
 vim.g.skip_ts_context_commentstring_module = true
 
 -- The built-in C syntax leaves function names unstyled unless this is enabled.

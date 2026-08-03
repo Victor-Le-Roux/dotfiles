@@ -11,7 +11,6 @@ end
 bind(mod .. " + Return", hl.dsp.exec_cmd(apps.terminal))
 bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd(apps.terminal_tmux))
 bind(mod .. " + ALT + Return", hl.dsp.exec_cmd(apps.terminal_fallback))
-bind(mod .. " + CTRL + Return", hl.dsp.exec_cmd(apps.terminal_fish))
 bind(mod .. " + CTRL + SHIFT + Return", hl.dsp.exec_cmd(apps.terminal_nushell))
 bind(mod .. " + Q", hl.dsp.window.close())
 bind(mod .. " + E", hl.dsp.exec_cmd(apps.file_manager))
