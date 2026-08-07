@@ -2,6 +2,7 @@
 alsa-plugins
 alsa-utils
 amd-ucode
+android-sdk-cmdline-tools-latest
 android-tools
 arandr
 arch-audit
@@ -86,6 +87,7 @@ inter-font
 inxi
 iotop
 iptables
+jdk21-openjdk
 jq
 keepassxc
 khal

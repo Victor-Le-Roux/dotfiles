@@ -6,15 +6,16 @@
   "margin-top": 0,
   "margin-left": 0,
   "margin-right": 0,
-  "modules-left": ["hyprland/workspaces"],
+  "modules-left": ["ext/workspaces"],
   "modules-center": ["custom/calendar"],
   "modules-right": ["custom/bluetooth", "pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
 
-  "hyprland/workspaces": {
-    "disable-scroll": true,
+  "ext/workspaces": {
     "all-outputs": true,
     "active-only": false,
-    "format": "{name}"
+    "sort-by-name": true,
+    "format": "{name}",
+    "on-click": "activate"
   },
 
   "pulseaudio": {

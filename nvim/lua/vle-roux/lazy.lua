@@ -311,7 +311,7 @@ require("lazy").setup({
     cmd = { "NvimTreeToggle", "NvimTreeFindFileToggle", "NvimTreeCollapse" },
     keys = {
       { "<leader><tab>", "<Cmd>NvimTreeToggle<CR>" },
-      { "<leader>f<tab>", "<Cmd>NvimTreeFindFileToggle<CR>" },
+      { "<leader>f<tab>", "<Cmd>NvimTreeFindFile!<CR>" },
       { "<leader>z", "<Cmd>NvimTreeCollapse<CR>" },
     },
     dependencies = { { "nvim-tree/nvim-web-devicons" } },
@@ -556,6 +556,18 @@ require("lazy").setup({
               vim.log.levels.WARN
             )
             return
+          end
+
+          if vim.fn.argc() == 0 then
+            local current_directory = vim.fs.normalize(vim.fn.getcwd())
+            if not is_allowed(current_directory, directories) then
+              vim.notify(
+                "Dossier courant hors des racines autorisées : aucun sélecteur ouvert.",
+                vim.log.levels.WARN
+              )
+              return
+            end
+            directories = { current_directory }
           end
 
           local directory_argument = false

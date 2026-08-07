@@ -103,7 +103,7 @@ bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 bind(mod .. " + ALT + left", hl.dsp.exec_cmd("playerctl previous"))
 bind(mod .. " + ALT + right", hl.dsp.exec_cmd("playerctl next"))
 
-bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd(apps.power_menu))
+bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("systemctl poweroff"))
 
 bind(
     "HOME",
