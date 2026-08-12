@@ -1,7 +1,6 @@
 local settings = require("modules.settings")
 local apps = settings.apps
 local scripts = settings.paths.scripts
-local screenshots = settings.paths.screenshots
 local mod = "SUPER"
 
 local function bind(keys, dispatcher, options)
@@ -107,15 +106,15 @@ bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("systemctl poweroff"))
 
 bind(
     "HOME",
-    hl.dsp.exec_cmd("hyprshot -m output -o " .. screenshots .. " --clipboard")
+    hl.dsp.exec_cmd("hyprshot -m output --clipboard-only")
 )
 bind(
     "SHIFT + HOME",
-    hl.dsp.exec_cmd("hyprshot -m region -o " .. screenshots .. " --clipboard")
+    hl.dsp.exec_cmd("hyprshot -m region --clipboard-only")
 )
 bind(
     "CTRL + HOME",
-    hl.dsp.exec_cmd("hyprshot -m window -o " .. screenshots .. " --clipboard")
+    hl.dsp.exec_cmd("hyprshot -m window --clipboard-only")
 )
 
 bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(scripts .. "/reading_mode.sh"))
