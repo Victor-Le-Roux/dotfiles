@@ -211,6 +211,21 @@ function M.compilation_database(root)
   end
 end
 
+function M.clangd_fallback_flags(root)
+  if not root or M.compilation_database(root) then
+    return {}
+  end
+
+  local flags = {}
+  for _, name in ipairs({ "include", "inc" }) do
+    local directory = root .. "/" .. name
+    if is_directory(directory) then
+      table.insert(flags, "-I" .. directory)
+    end
+  end
+  return flags
+end
+
 function M.check_compilation_database(bufnr)
   if not M.is_c_family(bufnr) then
     return true

@@ -52,7 +52,6 @@ local function start_session()
             .. "; fi"
     )
     restore_aoc_transform()
-    run_if_available("signal-desktop", settings.apps.signal, { workspace = "4 silent" })
     hl.exec_cmd(
         "if command -v pactl >/dev/null 2>&1; then "
             .. "for i in $(seq 1 20); do pactl info >/dev/null 2>&1 && break; sleep 0.5; done; "

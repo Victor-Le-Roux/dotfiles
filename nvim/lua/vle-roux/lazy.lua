@@ -183,6 +183,16 @@ require("lazy").setup({
           "makefile",
           ".git",
         },
+        before_init = function(init_params, config)
+          local fallback_flags = require("vle-roux.c_tools").clangd_fallback_flags(config.root_dir)
+          if #fallback_flags > 0 then
+            init_params.initializationOptions = vim.tbl_deep_extend(
+              "force",
+              init_params.initializationOptions or {},
+              { fallbackFlags = fallback_flags }
+            )
+          end
+        end,
         on_attach = on_attach,
         capabilities = clangd_capabilities,
       })
