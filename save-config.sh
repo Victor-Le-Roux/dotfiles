@@ -22,6 +22,8 @@ mkdir -p "$PKG_LIST_DIR"
 
 sources=(
   "$HOME/.zshrc"
+  "$HOME/.config/fish"
+  "$HOME/.makepkg.conf"
   "$HOME/.config/hypr"
   "$HOME/.config/kitty"
   "$HOME/.config/waybar"
@@ -31,6 +33,8 @@ sources=(
 )
 destinations=(
   ".zshrc"
+  "fish"
+  ".makepkg.conf"
   "hypr"
   "kitty"
   "waybar"
