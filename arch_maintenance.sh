@@ -217,6 +217,31 @@ check_space() {
     die "espace insuffisant sur $mount (${free_mb:-0} Mio < ${minimum_mb} Mio)."
 }
 
+critical_ownership_issues() {
+  local path owner
+  local -a critical_paths=(
+    /etc
+    /etc/passwd
+    /etc/group
+    /etc/shadow
+    /etc/gshadow
+    /etc/fstab
+    /etc/hosts
+    /etc/pacman.conf
+    /etc/pacman.d
+    /etc/pacman.d/gnupg
+    /etc/ssh
+    /etc/systemd/system
+    /etc/NetworkManager
+  )
+
+  for path in "${critical_paths[@]}"; do
+    [[ -e $path || -L $path ]] || continue
+    owner=$(stat -c '%u:%g' "$path" 2>/dev/null || true)
+    [[ $owner == 0:0 ]] || printf '%s (%s)\n' "$path" "${owner:-inconnu}"
+  done
+}
+
 prune_backups() {
   local -a entries=()
   local entry path
@@ -238,6 +263,17 @@ echo -e "${BLU}${BLD}═══════════════════�
 echo -e "${CYN}Début : $(date)${RST}"
 
 section "Pré-vol"
+
+mapfile -t ownership_issues < <(critical_ownership_issues)
+if ((${#ownership_issues[@]} > 0)); then
+  echo -e "${RED}${BLD}Propriétaires système dangereux :${RST}"
+  printf '  %s\n' "${ownership_issues[@]}"
+  if [[ $OPT_CHECK != true && $OPT_DRY_RUN != true ]]; then
+    die "corrige les propriétaires critiques de /etc avant toute maintenance."
+  fi
+else
+  echo -e "${GRN}Propriétaires des fichiers système critiques : corrects${RST}"
+fi
 
 if [[ $OPT_AC_REQUIRED == true && $OPT_CHECK == false ]]; then
   has_battery=false
@@ -558,7 +594,7 @@ fi
 
 section "Sécurité des paquets officiels"
 if [[ $NETWORK_OK == true ]] && have arch-audit; then
-  audit_output=$(arch-audit --upgradable --show-cve 2>&1 || true)
+  audit_output=$(arch-audit --show-cve 2>&1 || true)
   if [[ -n $audit_output ]]; then
     printf '%s\n' "$audit_output"
   else
@@ -615,6 +651,37 @@ if [[ ! -d /usr/lib/modules/$CURRENT_KERNEL ]]; then
   echo -e "${RED}${BLD}Le noyau chargé n'est plus installé : redémarrage recommandé.${RST}"
 else
   echo -e "${GRN}Le noyau chargé est encore présent.${RST}"
+fi
+
+mapfile -t installed_kernels < <(
+  pacman -Qq 2>/dev/null | grep -E '^linux(-lts|-zen|-hardened)?$' || true
+)
+if ((${#installed_kernels[@]} < 2)); then
+  echo -e "${YEL}Un seul noyau installé (${installed_kernels[*]:-inconnu}) : un noyau LTS de secours est recommandé.${RST}"
+else
+  echo -e "${GRN}Noyaux installés : ${installed_kernels[*]}${RST}"
+fi
+
+if [[ -e /boot/grub/grub.cfg &&
+  ( /boot/vmlinuz-linux -nt /boot/grub/grub.cfg ||
+    /boot/initramfs-linux.img -nt /boot/grub/grub.cfg ) ]]; then
+  echo -e "${YEL}La configuration GRUB est plus ancienne que le noyau/initramfs : régénération recommandée.${RST}"
+fi
+
+section "Exposition réseau"
+if systemctl is-active --quiet sshd.service 2>/dev/null; then
+  echo -e "${YEL}sshd est actif.${RST}"
+  firewall_active=false
+  for firewall in nftables.service ufw.service firewalld.service; do
+    if systemctl is-active --quiet "$firewall" 2>/dev/null; then
+      firewall_active=true
+      echo -e "${GRN}Pare-feu actif : ${firewall}${RST}"
+    fi
+  done
+  [[ $firewall_active == true ]] ||
+    echo -e "${YEL}Aucun service de pare-feu actif ; désactiver ou durcir SSH s'il est inutile.${RST}"
+else
+  echo -e "${GRN}Aucun serveur SSH actif.${RST}"
 fi
 
 if have needrestart && confirm "Analyser les processus à redémarrer ?"; then

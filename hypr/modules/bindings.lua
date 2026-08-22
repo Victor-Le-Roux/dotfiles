@@ -116,5 +116,3 @@ bind(
     "CTRL + HOME",
     hl.dsp.exec_cmd("hyprshot -m window --clipboard-only")
 )
-
-bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(scripts .. "/reading_mode.sh"))

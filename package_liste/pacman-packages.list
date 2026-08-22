@@ -108,6 +108,8 @@ libayatana-appindicator
 linux
 linux-firmware
 linux-headers
+linux-lts
+linux-lts-headers
 lld
 llvm
 luarocks
@@ -170,6 +172,7 @@ rar
 reflector
 ripgrep
 rkhunter
+rocm-smi-lib
 rofi
 rsync
 ruby
@@ -278,5 +281,6 @@ zathura
 zathura-pdf-mupdf
 zip
 zoxide
+zram-generator
 zsh
 zsh-completions

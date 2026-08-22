@@ -2,7 +2,7 @@
 set -euo pipefail
 
 preferred_monitor="HDMI-A-1"
-primary_monitor="DP-2"
+primary_description="Microstep MAG 272URDF"
 monitor_mode="1920x1080@60"
 monitor_scale="1"
 portrait_wallpaper="$HOME/Pictures/wallpapers/nikko-gaido-the-road-to-nikko.jpg"
@@ -46,8 +46,11 @@ monitor_name="$(
 [[ "$monitor_name" =~ ^[A-Za-z0-9._-]+$ ]] || exit 1
 
 primary_name="$(
-  jq -r --arg preferred "$primary_monitor" --arg secondary "$monitor_name" '
-    ([.[] | select(.name == $preferred)] + [.[] | select(.name != $secondary)])[0].name // empty
+  jq -r --arg description "$primary_description" --arg secondary "$monitor_name" '
+    (
+      [.[] | select(.description == $description and .name != $secondary)] +
+      [.[] | select(.name != $secondary)]
+    )[0].name // empty
   ' <<<"$monitors_json"
 )"
 [[ -n "$primary_name" ]] || exit 1

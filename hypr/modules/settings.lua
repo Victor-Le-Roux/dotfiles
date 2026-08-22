@@ -17,7 +17,7 @@ return {
 
     monitors = {
         primary = {
-            output = "DP-2",
+            output = "desc:Microstep MAG 272URDF",
             mode = "3840x2160@160",
             position = "0x0",
             scale = 1.5,

@@ -52,12 +52,6 @@ local function start_session()
             .. "; fi"
     )
     restore_aoc_transform()
-    hl.exec_cmd(
-        "if command -v pactl >/dev/null 2>&1; then "
-            .. "for i in $(seq 1 20); do pactl info >/dev/null 2>&1 && break; sleep 0.5; done; "
-            .. "pactl info >/dev/null 2>&1 && "
-            .. "pactl set-sink-volume \"$(pactl get-default-sink)\" 90%; fi"
-    )
 end
 
 hl.on("hyprland.start", start_session)
