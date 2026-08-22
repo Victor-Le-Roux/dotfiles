@@ -517,12 +517,18 @@ if [[ $OPT_FLATPAK == true ]]; then
     flatpak_args=(-y)
     [[ $OPT_AUTO == true ]] && flatpak_args+=(--noninteractive)
     if confirm "Mettre à jour les Flatpaks ?"; then
-      run flatpak update "${flatpak_args[@]}"
-      ACTIONS_DONE+=("✓ Flatpaks mis à jour")
+      if run flatpak update "${flatpak_args[@]}"; then
+        ACTIONS_DONE+=("✓ Flatpaks mis à jour")
+      else
+        echo -e "${YEL}La mise à jour Flatpak a échoué ; la maintenance continue.${RST}"
+      fi
     fi
     if confirm "Supprimer les runtimes Flatpak inutilisés ?"; then
-      run flatpak uninstall --unused "${flatpak_args[@]}"
-      ACTIONS_DONE+=("✓ Runtimes Flatpak inutilisés supprimés")
+      if run flatpak uninstall --unused "${flatpak_args[@]}"; then
+        ACTIONS_DONE+=("✓ Runtimes Flatpak inutilisés supprimés")
+      else
+        echo -e "${YEL}Le nettoyage Flatpak a échoué ; la maintenance continue.${RST}"
+      fi
     fi
   fi
 fi
@@ -596,9 +602,18 @@ section "Sécurité des paquets officiels"
 if [[ $NETWORK_OK == true ]] && have arch-audit; then
   audit_output=$(arch-audit --show-cve 2>&1 || true)
   if [[ -n $audit_output ]]; then
+    echo -e "${YEL}Vulnérabilités connues (une correction n'est pas toujours disponible) :${RST}"
     printf '%s\n' "$audit_output"
   else
-    echo -e "${GRN}Aucune vulnérabilité corrigible signalée${RST}"
+    echo -e "${GRN}Aucune vulnérabilité connue signalée${RST}"
+  fi
+
+  fixable_audit_output=$(arch-audit --upgradable --show-cve 2>&1 || true)
+  if [[ -n $fixable_audit_output ]]; then
+    echo -e "${RED}Correctifs disponibles via une mise à niveau :${RST}"
+    printf '%s\n' "$fixable_audit_output"
+  else
+    echo -e "${GRN}Aucun correctif de sécurité disponible n'attend une mise à niveau.${RST}"
   fi
 else
   echo -e "${YEL}arch-audit indisponible ou hors ligne${RST}"
