@@ -105,14 +105,14 @@ bind(mod .. " + ALT + right", hl.dsp.exec_cmd("playerctl next"))
 bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("systemctl poweroff"))
 
 bind(
-    "HOME",
+    "Print",
     hl.dsp.exec_cmd("hyprshot -m output --clipboard-only")
 )
 bind(
-    "SHIFT + HOME",
+    "SHIFT + Print",
     hl.dsp.exec_cmd("hyprshot -m region --clipboard-only")
 )
 bind(
-    "CTRL + HOME",
+    "CTRL + Print",
     hl.dsp.exec_cmd("hyprshot -m window --clipboard-only")
 )

@@ -50,6 +50,13 @@ hl.config({
     },
 })
 
+-- Smooth fractional scaling for legacy XWayland apps such as Slippi Launcher.
+hl.config({
+    xwayland = {
+        use_nearest_neighbor = false,
+    },
+})
+
 hl.curve("eink", {
     type = "bezier",
     points = {

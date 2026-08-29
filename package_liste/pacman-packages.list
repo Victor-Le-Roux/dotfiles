@@ -36,6 +36,8 @@ direnv
 discord
 docker
 docker-compose
+dolphin-emu
+dolphin-emu-tool
 dosfstools
 efibootmgr
 entr
@@ -216,6 +218,7 @@ ttf-jetbrains-mono-nerd
 ttf-proggyclean-nerd
 ufw
 unzip
+usbutils
 valgrind
 vim
 vlc

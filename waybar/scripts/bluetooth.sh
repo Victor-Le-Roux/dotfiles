@@ -5,6 +5,7 @@ signal_number=9
 action="${1:-status}"
 query_timeout=4
 action_timeout=20
+audio_sink_uuid="0000110b-0000-1000-8000-00805f9b34fb"
 runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
 if [[ ! -d "${runtime_dir}" || ! -w "${runtime_dir}" ]]; then
   runtime_dir="/tmp"
@@ -144,6 +145,87 @@ wait_for_connection_state() {
   done
 
   return 1
+}
+
+pactl_query() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${query_timeout}s" pactl "$@" 2>/dev/null || true
+  else
+    pactl "$@" 2>/dev/null || true
+  fi
+}
+
+find_bluetooth_sink() {
+  local mac="$1"
+  local node_fragment="bluez_output.${mac//:/_}"
+
+  pactl_query list short sinks |
+    awk -v fragment="${node_fragment}" '$2 ~ fragment { print $2; exit }'
+}
+
+find_speaker_sink() {
+  local sinks=""
+  local sink=""
+
+  sinks="$(pactl_query list short sinks)"
+  sink="$(awk '$2 !~ /^bluez_output\./ && $2 ~ /analog-stereo/ { print $2; exit }' <<<"${sinks}")"
+
+  if [[ -z "${sink}" ]]; then
+    sink="$(awk '$2 !~ /^bluez_output\./ { print $2; exit }' <<<"${sinks}")"
+  fi
+
+  printf '%s\n' "${sink}"
+}
+
+wait_for_bluetooth_sink() {
+  local mac="$1"
+  local sink=""
+
+  for _ in {1..24}; do
+    sink="$(find_bluetooth_sink "${mac}")"
+    if [[ -n "${sink}" ]]; then
+      printf '%s\n' "${sink}"
+      return 0
+    fi
+    sleep 0.25
+  done
+
+  return 1
+}
+
+move_active_streams() {
+  local sink="$1"
+  local input_id=""
+
+  while read -r input_id _; do
+    [[ "${input_id}" =~ ^[0-9]+$ ]] || continue
+    pactl move-sink-input "${input_id}" "${sink}" >/dev/null 2>&1 || true
+  done < <(pactl_query list short sink-inputs)
+}
+
+activate_audio_sink() {
+  local sink="$1"
+
+  [[ -n "${sink}" ]] || return 1
+  pactl set-default-sink "${sink}" >/dev/null 2>&1 || return 1
+  move_active_streams "${sink}"
+}
+
+switch_to_bluetooth_audio() {
+  local mac="$1"
+  local sink=""
+
+  sink="$(wait_for_bluetooth_sink "${mac}" || true)"
+  [[ -n "${sink}" ]] || return 1
+  activate_audio_sink "${sink}"
+}
+
+switch_to_speakers_audio() {
+  local sink=""
+
+  sink="$(find_speaker_sink)"
+  [[ -n "${sink}" ]] || return 1
+  activate_audio_sink "${sink}"
 }
 
 power_on() {
@@ -322,11 +404,18 @@ select_device() {
 toggle_device() {
   local mac="$1"
   local name="$2"
+  local bluetooth_sink=""
 
-  if device_is_connected "${mac}"; then
+  bluetooth_sink="$(find_bluetooth_sink "${mac}")"
+
+  if device_is_connected "${mac}" && [[ -n "${bluetooth_sink}" ]]; then
+    if ! switch_to_speakers_audio; then
+      notify "Sortie enceintes introuvable"
+    fi
+
     btctl_action disconnect "${mac}" >/dev/null
     if wait_for_connection_state "${mac}" 0; then
-      notify "Deconnecte: ${name}"
+      notify "Enceintes actives — ${name} deconnecte"
       return 0
     fi
 
@@ -334,10 +423,16 @@ toggle_device() {
     return 1
   fi
 
-  btctl_action connect "${mac}" >/dev/null
+  btctl_action trust "${mac}" >/dev/null
+  btctl_action connect "${mac}" "${audio_sink_uuid}" >/dev/null
   if wait_for_connection_state "${mac}" 1; then
-    notify "Connecte: ${name}"
-    return 0
+    if switch_to_bluetooth_audio "${mac}"; then
+      notify "Casque actif: ${name}"
+      return 0
+    fi
+
+    notify "${name} connecte, mais sortie audio introuvable"
+    return 1
   fi
 
   notify "Connexion impossible: ${name}"
