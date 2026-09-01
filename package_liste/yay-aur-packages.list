@@ -10,6 +10,7 @@ gtk-engine-murrine
 hey-bin
 hyprshade
 lib32-giflib
+lib32-mpg123
 lib32-openal
 lib32-v4l-utils
 music-assistant-desktop
