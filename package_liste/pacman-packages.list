@@ -226,6 +226,7 @@ vulkan-radeon
 vulkan-tools
 wakeonlan
 waybar
+wayland-utils
 wev
 whois
 wireplumber
