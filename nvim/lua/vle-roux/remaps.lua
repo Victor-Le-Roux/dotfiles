@@ -78,7 +78,7 @@ xnoremap("J", "mzJ`z")
 nnoremap("<leader>cb", "<Cmd>Build<CR>", { silent = true, desc = "Build project" })
 nnoremap("<leader>cc", "<Cmd>CConfigure<CR>", { silent = true, desc = "Configure CMake project" })
 nnoremap("<leader>ct", "<Cmd>CTest<CR>", { silent = true, desc = "Run CTest" })
-nnoremap("<leader>cr", "<Cmd>Run<CR>", { silent = true, desc = "Run program" })
+nnoremap("<leader>cr", "<Cmd>split | terminal fish -c crun<CR>", { silent = true, desc = "Compiler et lancer le projet" })
 nnoremap("<leader>co", "<Cmd>OverseerToggle<CR>", { silent = true, desc = "Toggle task list" })
 
 inoremap("<Down>", "<Nop>")

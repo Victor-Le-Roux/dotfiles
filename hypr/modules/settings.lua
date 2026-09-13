@@ -10,7 +10,7 @@ return {
         terminal_nushell = "ghostty -e nu",
         file_manager = "thunar",
         launcher = home .. "/.config/rofi/launcher_2.sh",
-        browser = "/usr/bin/thorium-browser",
+        browser = "/usr/bin/brave-origin --password-store=basic",
         signal = "signal-desktop",
         power_menu = home .. "/.local/bin/wlogout",
     },
