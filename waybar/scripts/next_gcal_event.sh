@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if ! command -v gcalcli >/dev/null 2>&1; then
-  echo '{"text":"CAL N/A","class":"muted","tooltip":"Installe et configure gcalcli pour afficher Google Agenda."}'
+  echo '{"text":"CAL N/A","class":"muted","tooltip":"Install and configure gcalcli to display Google Calendar."}'
   exit 0
 fi
 
@@ -12,7 +12,7 @@ agenda_lines=$(LC_ALL=C timeout 20s gcalcli --nocolor agenda "${start_date}" "${
   awk '/^[A-Za-z]{3} [A-Za-z]{3} [ 0-9]{1,2}[[:space:]]+[0-9]{2}:[0-9]{2}/ {print}')
 
 if [ -z "${agenda_lines}" ]; then
-  echo '{"text":"","class":"hidden","tooltip":"Aucun rendez-vous dans les 30 prochains jours."}'
+  echo '{"text":"","class":"hidden","tooltip":"No events in the next 30 days."}'
   exit 0
 fi
 
@@ -21,7 +21,7 @@ year=$(date +%Y)
 selected_line=""
 selected_epoch=""
 
-# Keep "maintenant" only briefly, then switch to the next event.
+# Keep "now" only briefly, then switch to the next event.
 now_window=90
 
 while IFS= read -r candidate; do
@@ -50,7 +50,7 @@ while IFS= read -r candidate; do
 done <<< "${agenda_lines}"
 
 if [ -z "${selected_line}" ] || [ -z "${selected_epoch}" ]; then
-  echo '{"text":"","class":"hidden","tooltip":"Aucun rendez-vous a venir dans les 30 prochains jours."}'
+  echo '{"text":"","class":"hidden","tooltip":"No upcoming events in the next 30 days."}'
   exit 0
 fi
 
@@ -60,7 +60,7 @@ title_raw=$(printf '%s' "${selected_line}" | cut -d' ' -f5-)
 title_clean=$(printf '%s' "${title_raw}" | tr -d '\\"' | sed 's/[[:space:]]\+/ /g' | sed 's/^ //;s/ $//')
 title_clean=$(printf '%s' "${title_clean}" | sed -E 's/^[0-9]{2}:[0-9]{2}[[:space:]]+//')
 short_title=$(printf '%s' "${title_clean}" | cut -c1-36)
-[ -z "${short_title}" ] && short_title="Rendez-vous"
+[ -z "${short_title}" ] && short_title="Event"
 
 if [ -z "${time_exact}" ]; then
   time_exact=$(printf '%s' "${selected_line}" | awk '{print $4}')
@@ -70,10 +70,10 @@ if [ -z "${start_fmt}" ]; then
 fi
 
 diff=$((selected_epoch - now_epoch))
-rel="bientot"
+rel="soon"
 
 if [ "${diff}" -ge "-${now_window}" ] && [ "${diff}" -le "${now_window}" ]; then
-  rel="maintenant"
+  rel="now"
 elif [ "${diff}" -lt 3600 ]; then
   mins=$(((diff + 59) / 60))
   [ "${mins}" -lt 1 ] && mins=1
@@ -90,14 +90,14 @@ else
   days=$((diff / 86400))
   hours=$(((diff % 86400) / 3600))
   if [ "${hours}" -gt 0 ]; then
-    rel="${days}j${hours}h"
+    rel="${days}d${hours}h"
   else
-    rel="${days}j"
+    rel="${days}d"
   fi
 fi
 
 text="${rel} - ${time_exact}, ${short_title}"
-tooltip="Prochain rendez-vous: ${start_fmt} - ${title_clean}"
+tooltip="Next event: ${start_fmt} - ${title_clean}"
 
 jq -cn --arg text "${text}" --arg tooltip "${tooltip}" \
   '{text: $text, tooltip: $tooltip}'

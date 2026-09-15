@@ -1,0 +1,133 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "spacing": 0,
+  "margin-top": 0,
+  "margin-left": 0,
+  "margin-right": 0,
+  "modules-left": ["ext/workspaces"],
+  "modules-center": ["custom/calendar"],
+  "modules-right": ["custom/bluetooth", "pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
+
+  "ext/workspaces": {
+    "all-outputs": true,
+    "active-only": false,
+    "sort-by-name": true,
+    "format": "{name}",
+    "on-click": "activate"
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-bluetooth": "󰋋 {volume}%",
+    "format-bluetooth-muted": "󰟎 mute",
+    "format-muted": "󰝟 mute",
+    "format-icons": {
+      "headphone": "󰋋",
+      "hands-free": "󰋋",
+      "headset": "󰋋",
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "scroll-step": 5,
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-scroll-up": "wpctl set-volume -l 0.90 @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+  },
+
+  "custom/bluetooth": {
+    "exec": "~/.config/waybar/scripts/bluetooth.sh status",
+    "interval": 15,
+    "signal": 9,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true,
+    "on-click": "~/.config/waybar/scripts/bluetooth.sh toggle"
+  },
+
+  "group/system": {
+    "orientation": "inherit",
+    "modules": ["custom/system-toggle", "custom/cpu", "custom/ram", "custom/disk", "network"],
+    "drawer": {
+      "transition-duration": 250,
+      "children-class": "system-item",
+      "transition-left-to-right": false
+    }
+  },
+
+  "network": {
+    "format-wifi": "NET {signalStrength}%",
+    "format-ethernet": "NET LAN",
+    "format-disconnected": "NET OFF",
+    "tooltip": false
+  },
+
+  "custom/system-toggle": {
+    "format": "SYS",
+    "tooltip": false
+  },
+
+  "custom/cpu": {
+    "exec": "~/.config/waybar/scripts/cpu_usage.sh",
+    "interval": 8,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/ram": {
+    "exec": "~/.config/waybar/scripts/ram_usage.sh",
+    "interval": 10,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/disk": {
+    "exec": "~/.config/waybar/scripts/disk_usage.sh",
+    "interval": 15,
+    "format": "{}",
+    "tooltip": false
+  },
+
+  "custom/updates": {
+    "exec": "~/.config/waybar/scripts/paru_updates.sh",
+    "interval": 600,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": false
+  },
+
+  "custom/calendar": {
+    "exec": "bash ~/.config/waybar/scripts/next_gcal_event.sh",
+    "interval": 120,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true
+  },
+
+  "tray": {
+    "icon-size": 14,
+    "spacing": 10
+  },
+
+  "clock": {
+    "locale": "fr_FR.UTF-8",
+    "format": "{:%d/%m %H:%M}",
+    "tooltip": false
+  },
+
+  "custom/aoc-rotate": {
+    "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
+    "interval": 30,
+    "signal": 10,
+    "return-type": "json",
+    "format": "{text}",
+    "tooltip": true,
+    "on-click": "~/.config/waybar/scripts/aoc_rotate.sh toggle"
+  },
+
+  "custom/power": {
+    "format": "⏻",
+    "tooltip": false,
+    "on-click": "/home/victor/.local/bin/wlogout"
+  }
+}

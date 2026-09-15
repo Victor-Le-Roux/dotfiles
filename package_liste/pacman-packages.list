@@ -189,6 +189,7 @@ signal-desktop
 sioyek
 slurp
 smartmontools
+soundux
 starship
 stress-ng
 sudo
@@ -204,7 +205,6 @@ thunar
 thunar-archive-plugin
 thunar-volman
 tmux
-torbrowser-launcher
 tree
 ttf-crimson-pro
 ttf-droid
@@ -281,6 +281,7 @@ yad
 yasm
 ydotool
 yt-dlp
+yt-dlp-drop-in
 zathura
 zathura-pdf-mupdf
 zip

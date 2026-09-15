@@ -46,9 +46,8 @@ local function start_session()
     hl.exec_cmd(
         "if command -v awww >/dev/null 2>&1; then "
             .. "for i in $(seq 1 50); do awww query >/dev/null 2>&1 && break; sleep 0.1; done; "
-            .. "awww query >/dev/null 2>&1 && exec awww img "
-            .. "--transition-type none --transition-duration 0 "
-            .. shell_quote(settings.paths.wallpaper)
+            .. "awww query >/dev/null 2>&1 && exec "
+            .. shell_quote(scripts .. "/apply_estampe_wallpaper.sh")
             .. "; fi"
     )
     restore_aoc_transform()

@@ -1,11 +1,11 @@
 hl.config({
     general = {
-        gaps_in = 2,
-        gaps_out = 5,
-        border_size = 2,
+        gaps_in = 8,
+        gaps_out = 10,
+        border_size = 1,
         col = {
-            active_border = "rgb(1b1f2a)",
-            inactive_border = "rgb(bdb7a6)",
+            active_border = "rgb(9e9175)",
+            inactive_border = "rgb(b4a78a)",
         },
         resize_on_border = false,
         allow_tearing = false,

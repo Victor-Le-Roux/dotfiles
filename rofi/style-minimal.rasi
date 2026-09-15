@@ -11,108 +11,95 @@ configuration {
 }
 
 * {
-    font: "Inter Medium 12";
-    background: #e8e3d3f2;
-    background-alt: #d8d2bf;
-    foreground: #1b1f2a;
-    selected: #d8d2bf;
-    urgent: #cc241d;
+    font: "JetBrains Mono 13";
+    background: #eee7d5;
+    background-alt: #d8d0b9;
+    foreground: #3c3b31;
+    selected: #d8d0b9;
+    urgent: #a5543c;
 }
-
 window {
-    transparency: "real";
     location: center;
     anchor: center;
+    x-offset: 0px;
+    y-offset: -72px;
     width: 520px;
     border: 1px;
-    border-radius: 12px;
-    border-color: #bdb7a6;
+    border-radius: 0px;
+    border-color: #9e9175;
     background-color: @background;
-}
-
+    }
 mainbox {
-    spacing: 8px;
-    padding: 12px;
+    spacing: 0px;
+    padding: 0px;
     background-color: transparent;
-    children: [ "inputbar", "listview" ];
-}
-
-inputbar {
-    spacing: 8px;
-    padding: 8px 10px;
-    border: 1px;
-    border-radius: 10px;
-    border-color: #bdb7a6;
-    background-color: #ece7d8;
-    children: [ "textbox-prompt-colon", "entry" ];
-}
-
-textbox-prompt-colon {
-    str: "Apps";
+    children: [ "textbox-heading", "inputbar", "listview" ];
+    }
+textbox-heading {
     expand: false;
-    text-color: #6a6558;
+    str: "Applications";
+    padding: 14px 22px;
+    font: "JetBrains Mono 11";
+    text-color: #726b58;
     background-color: transparent;
-}
-
+    border: 0px 0px 1px;
+    border-color: #b4a78a;
+    }
+inputbar {
+    spacing: 10px;
+    margin: 12px 20px;
+    padding: 12px 8px;
+    border: 0px 0px 1px;
+    border-color: #726b58;
+    background-color: transparent;
+    children: [ "entry" ];
+    }
 entry {
     expand: true;
     text-color: @foreground;
-    placeholder: "Lancer une application";
-    placeholder-color: #6a6558;
+    placeholder: "Search applications";
+    placeholder-color: #726b58;
     background-color: transparent;
-}
-
+    }
 listview {
     lines: 8;
     columns: 1;
     cycle: true;
     dynamic: true;
     scrollbar: false;
-    spacing: 4px;
+    spacing: 2px;
+    margin: 0px 20px 20px;
     background-color: transparent;
-}
-
+    }
 element {
     children: [ "element-icon", "element-text" ];
-    spacing: 10px;
-    padding: 8px 10px;
-    border-radius: 8px;
+    spacing: 14px;
+    padding: 12px 10px;
+    border: 0px 0px 0px 3px;
+    border-color: transparent;
     background-color: transparent;
     text-color: @foreground;
-}
-
-element normal.normal,
-element normal.active {
+    }
+element normal.normal, element normal.active {
     background-color: transparent;
     text-color: @foreground;
-}
-
-element normal.urgent {
-    background-color: @urgent;
-    text-color: #e8e3d3;
-}
-
-element selected.normal,
-element selected.active {
+    }
+element selected.normal, element selected.active {
     background-color: @selected;
-    text-color: #1b1f2a;
-    border: 1px;
-    border-color: #2f9caf;
-}
-
-element selected.urgent {
+    text-color: @foreground;
+    border-color: #a5543c;
+    }
+element normal.urgent, element selected.urgent {
     background-color: @urgent;
-    text-color: #e8e3d3;
-}
-
+    text-color: #fff4dd;
+    }
 element-icon {
     enabled: true;
-    size: 22px;
+    size: 24px;
     background-color: transparent;
     text-color: inherit;
-}
-
+    }
 element-text {
     background-color: transparent;
     text-color: inherit;
-}
+    }

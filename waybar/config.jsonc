@@ -1,133 +1,320 @@
-{
-  "layer": "top",
-  "position": "top",
-  "height": 30,
-  "spacing": 0,
-  "margin-top": 0,
-  "margin-left": 0,
-  "margin-right": 0,
-  "modules-left": ["ext/workspaces"],
-  "modules-center": ["custom/calendar"],
-  "modules-right": ["custom/bluetooth", "pulseaudio", "group/system", "tray", "custom/updates", "clock", "custom/aoc-rotate", "custom/power"],
-
-  "ext/workspaces": {
-    "all-outputs": true,
-    "active-only": false,
-    "sort-by-name": true,
-    "format": "{name}",
-    "on-click": "activate"
-  },
-
-  "pulseaudio": {
-    "format": "{icon} {volume}%",
-    "format-bluetooth": "󰋋 {volume}%",
-    "format-bluetooth-muted": "󰟎 mute",
-    "format-muted": "󰝟 mute",
-    "format-icons": {
-      "headphone": "󰋋",
-      "hands-free": "󰋋",
-      "headset": "󰋋",
-      "default": ["󰕿", "󰖀", "󰕾"]
+[
+  {
+    "layer": "top",
+    "position": "top",
+    "height": 60,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "modules-left": [],
+    "modules-center": [
+      "group/estampe"
+    ],
+    "modules-right": [],
+    "ext/workspaces": {
+      "all-outputs": true,
+      "active-only": false,
+      "sort-by-name": true,
+      "format": "{name}",
+      "on-click": "activate"
     },
-    "scroll-step": 5,
-    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
-    "on-scroll-up": "wpctl set-volume -l 0.90 @DEFAULT_AUDIO_SINK@ 5%+",
-    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+    "pulseaudio": {
+      "format": "{icon} {volume}%",
+      "format-bluetooth": "󰋋 {volume}%",
+      "format-bluetooth-muted": "󰟎 mute",
+      "format-muted": "󰝟 mute",
+      "format-icons": {
+        "headphone": "󰋋",
+        "hands-free": "󰋋",
+        "headset": "󰋋",
+        "default": [
+          "󰕿",
+          "󰖀",
+          "󰕾"
+        ]
+      },
+      "scroll-step": 5,
+      "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+      "on-scroll-up": "wpctl set-volume -l 0.90 @DEFAULT_AUDIO_SINK@ 5%+",
+      "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+    },
+    "custom/bluetooth": {
+      "exec": "~/.config/waybar/scripts/bluetooth.sh status",
+      "interval": 15,
+      "signal": 9,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "on-click": "~/.config/waybar/scripts/bluetooth.sh toggle"
+    },
+    "group/system": {
+      "orientation": "inherit",
+      "modules": [
+        "custom/system-toggle",
+        "custom/cpu",
+        "custom/ram",
+        "custom/disk",
+        "network"
+      ],
+      "drawer": {
+        "transition-duration": 250,
+        "children-class": "system-item",
+        "transition-left-to-right": false
+      }
+    },
+    "network": {
+      "format-wifi": "NET {signalStrength}%",
+      "format-ethernet": "NET LAN",
+      "format-disconnected": "NET OFF",
+      "tooltip": false
+    },
+    "custom/system-toggle": {
+      "format": "SYS",
+      "tooltip": true,
+      "tooltip-format": "Hover to show CPU, memory, disk and network"
+    },
+    "custom/cpu": {
+      "exec": "~/.config/waybar/scripts/cpu_usage.sh",
+      "interval": 8,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/ram": {
+      "exec": "~/.config/waybar/scripts/ram_usage.sh",
+      "interval": 10,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/disk": {
+      "exec": "~/.config/waybar/scripts/disk_usage.sh",
+      "interval": 15,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/updates": {
+      "interval": 600,
+      "return-type": "json",
+      "format": "{text}",
+      "exec": "~/.config/waybar/scripts/paru_updates.sh | sed 's/UPD/Updates/g'",
+      "tooltip": true,
+      "tooltip-format": "Available updates according to local package databases"
+    },
+    "custom/calendar": {
+      "exec": "bash ~/.config/waybar/scripts/next_gcal_event.sh",
+      "interval": 120,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "max-length": 24
+    },
+    "tray": {
+      "icon-size": 14,
+      "spacing": 10
+    },
+    "clock": {
+      "locale": "en_US.UTF-8",
+      "format": "<span foreground=\"#726b58\">{0:%d/%m}</span>  <b>{0:%H:%M}</b>",
+      "tooltip": true,
+      "tooltip-format": "{:%A %d %B %Y}"
+    },
+    "custom/aoc-rotate": {
+      "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
+      "interval": 30,
+      "signal": 10,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "on-click": "~/.config/waybar/scripts/aoc_rotate.sh toggle"
+    },
+    "custom/power": {
+      "format": "⏻",
+      "tooltip": false,
+      "on-click": "/home/victor/.local/bin/wlogout"
+    },
+    "exclusive": true,
+    "group/estampe": {
+      "orientation": "horizontal",
+      "modules": [
+        "ext/workspaces",
+        "custom/bluetooth",
+        "pulseaudio",
+        "group/system",
+        "tray",
+        "custom/calendar",
+        "custom/updates",
+        "clock",
+        "custom/aoc-rotate",
+        "custom/power"
+      ]
+    },
+    "output": [
+      "!HDMI-A-1",
+      "*"
+    ]
   },
-
-  "custom/bluetooth": {
-    "exec": "~/.config/waybar/scripts/bluetooth.sh status",
-    "interval": 15,
-    "signal": 9,
-    "return-type": "json",
-    "format": "{text}",
-    "tooltip": true,
-    "on-click": "~/.config/waybar/scripts/bluetooth.sh toggle"
-  },
-
-  "group/system": {
-    "orientation": "inherit",
-    "modules": ["custom/system-toggle", "custom/cpu", "custom/ram", "custom/disk", "network"],
-    "drawer": {
-      "transition-duration": 250,
-      "children-class": "system-item",
-      "transition-left-to-right": false
+  {
+    "layer": "top",
+    "position": "top",
+    "height": 100,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "modules-left": [],
+    "modules-center": [
+      "group/estampe"
+    ],
+    "modules-right": [],
+    "ext/workspaces": {
+      "all-outputs": true,
+      "active-only": false,
+      "sort-by-name": true,
+      "format": "{name}",
+      "on-click": "activate"
+    },
+    "pulseaudio": {
+      "format": "{icon} {volume}%",
+      "format-bluetooth": "󰋋 {volume}%",
+      "format-bluetooth-muted": "󰟎 mute",
+      "format-muted": "󰝟 mute",
+      "format-icons": {
+        "headphone": "󰋋",
+        "hands-free": "󰋋",
+        "headset": "󰋋",
+        "default": [
+          "󰕿",
+          "󰖀",
+          "󰕾"
+        ]
+      },
+      "scroll-step": 5,
+      "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+      "on-scroll-up": "wpctl set-volume -l 0.90 @DEFAULT_AUDIO_SINK@ 5%+",
+      "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+    },
+    "custom/bluetooth": {
+      "exec": "~/.config/waybar/scripts/bluetooth.sh status",
+      "interval": 15,
+      "signal": 9,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "on-click": "~/.config/waybar/scripts/bluetooth.sh toggle"
+    },
+    "group/system": {
+      "orientation": "inherit",
+      "modules": [
+        "custom/system-toggle",
+        "custom/cpu",
+        "custom/ram",
+        "custom/disk",
+        "network"
+      ],
+      "drawer": {
+        "transition-duration": 250,
+        "children-class": "system-item",
+        "transition-left-to-right": false
+      }
+    },
+    "network": {
+      "format-wifi": "NET {signalStrength}%",
+      "format-ethernet": "NET LAN",
+      "format-disconnected": "NET OFF",
+      "tooltip": false
+    },
+    "custom/system-toggle": {
+      "format": "SYS",
+      "tooltip": true,
+      "tooltip-format": "Hover to show CPU, memory, disk and network"
+    },
+    "custom/cpu": {
+      "exec": "~/.config/waybar/scripts/cpu_usage.sh",
+      "interval": 8,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/ram": {
+      "exec": "~/.config/waybar/scripts/ram_usage.sh",
+      "interval": 10,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/disk": {
+      "exec": "~/.config/waybar/scripts/disk_usage.sh",
+      "interval": 15,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/updates": {
+      "interval": 600,
+      "return-type": "json",
+      "format": "{text}",
+      "exec": "~/.config/waybar/scripts/paru_updates.sh | sed 's/UPD/Updates/g'",
+      "tooltip": true,
+      "tooltip-format": "Available updates according to local package databases"
+    },
+    "custom/calendar": {
+      "exec": "bash ~/.config/waybar/scripts/next_gcal_event.sh",
+      "interval": 120,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "max-length": 24
+    },
+    "tray": {
+      "icon-size": 14,
+      "spacing": 10
+    },
+    "clock": {
+      "locale": "en_US.UTF-8",
+      "format": "<span foreground=\"#726b58\">{0:%d/%m}</span>  <b>{0:%H:%M}</b>",
+      "tooltip": true,
+      "tooltip-format": "{:%A %d %B %Y}"
+    },
+    "custom/aoc-rotate": {
+      "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
+      "interval": 30,
+      "signal": 10,
+      "return-type": "json",
+      "format": "{text}",
+      "tooltip": true,
+      "on-click": "~/.config/waybar/scripts/aoc_rotate.sh toggle"
+    },
+    "custom/power": {
+      "format": "⏻",
+      "tooltip": false,
+      "on-click": "/home/victor/.local/bin/wlogout"
+    },
+    "exclusive": true,
+    "group/estampe": {
+      "orientation": "vertical",
+      "modules": [
+        "group/estampe-main",
+        "group/estampe-extra"
+      ]
+    },
+    "output": "HDMI-A-1",
+    "name": "estampe-secondary",
+    "group/estampe-main": {
+      "orientation": "horizontal",
+      "modules": [
+        "ext/workspaces",
+        "custom/bluetooth",
+        "pulseaudio",
+        "group/system",
+        "clock",
+        "custom/aoc-rotate",
+        "custom/power"
+      ]
+    },
+    "group/estampe-extra": {
+      "orientation": "horizontal",
+      "modules": [
+        "tray",
+        "custom/calendar",
+        "custom/updates"
+      ]
     }
-  },
-
-  "network": {
-    "format-wifi": "NET {signalStrength}%",
-    "format-ethernet": "NET LAN",
-    "format-disconnected": "NET OFF",
-    "tooltip": false
-  },
-
-  "custom/system-toggle": {
-    "format": "SYS",
-    "tooltip": false
-  },
-
-  "custom/cpu": {
-    "exec": "~/.config/waybar/scripts/cpu_usage.sh",
-    "interval": 8,
-    "format": "{}",
-    "tooltip": false
-  },
-
-  "custom/ram": {
-    "exec": "~/.config/waybar/scripts/ram_usage.sh",
-    "interval": 10,
-    "format": "{}",
-    "tooltip": false
-  },
-
-  "custom/disk": {
-    "exec": "~/.config/waybar/scripts/disk_usage.sh",
-    "interval": 15,
-    "format": "{}",
-    "tooltip": false
-  },
-
-  "custom/updates": {
-    "exec": "~/.config/waybar/scripts/paru_updates.sh",
-    "interval": 600,
-    "return-type": "json",
-    "format": "{text}",
-    "tooltip": false
-  },
-
-  "custom/calendar": {
-    "exec": "bash ~/.config/waybar/scripts/next_gcal_event.sh",
-    "interval": 120,
-    "return-type": "json",
-    "format": "{text}",
-    "tooltip": true
-  },
-
-  "tray": {
-    "icon-size": 14,
-    "spacing": 10
-  },
-
-  "clock": {
-    "locale": "fr_FR.UTF-8",
-    "format": "{:%d/%m %H:%M}",
-    "tooltip": false
-  },
-
-  "custom/aoc-rotate": {
-    "exec": "~/.config/waybar/scripts/aoc_rotate.sh status",
-    "interval": 30,
-    "signal": 10,
-    "return-type": "json",
-    "format": "{text}",
-    "tooltip": true,
-    "on-click": "~/.config/waybar/scripts/aoc_rotate.sh toggle"
-  },
-
-  "custom/power": {
-    "format": "⏻",
-    "tooltip": false,
-    "on-click": "/home/victor/.local/bin/wlogout"
   }
-}
+]

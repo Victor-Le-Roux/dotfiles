@@ -114,20 +114,9 @@ apply_layout() {
 }
 
 apply_wallpaper() {
-  local transform="$1"
-  local wallpaper
-
-  wallpaper="$(wallpaper_for_transform "$transform")"
-  [[ -f "$wallpaper" ]] || return 0
   command -v awww >/dev/null 2>&1 || return 0
   awww query >/dev/null 2>&1 || return 0
-
-  awww img \
-    --outputs "$monitor_name" \
-    --resize crop \
-    --transition-type none \
-    --transition-duration 0 \
-    "$wallpaper" >/dev/null 2>&1 || true
+  "$HOME/.config/hypr/scripts/apply_estampe_wallpaper.sh" "$monitor_name" || true
 }
 
 target_transform="$current_transform"
@@ -155,7 +144,7 @@ if [[ "$action" != "status" ]]; then
 fi
 
 if is_portrait "$target_transform"; then
-  printf '{"text":"󰍺","tooltip":"AOC (%s) en portrait — clic pour paysage","class":"portrait"}\n' "$monitor_name"
+  printf '{"text":"󰍺","tooltip":"AOC (%s) in portrait — click for landscape","class":"portrait"}\n' "$monitor_name"
 else
-  printf '{"text":"󰍹","tooltip":"AOC (%s) en paysage — clic pour portrait","class":"landscape"}\n' "$monitor_name"
+  printf '{"text":"󰍹","tooltip":"AOC (%s) in landscape — click for portrait","class":"landscape"}\n' "$monitor_name"
 fi

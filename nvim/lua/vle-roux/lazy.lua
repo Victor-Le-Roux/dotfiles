@@ -988,7 +988,9 @@ require("lazy").setup({
       return {
         options = {
           globalstatus = true,
-          theme = "auto",
+          theme = "estampe",
+          component_separators = { left = "", right = "" },
+          section_separators = { left = "", right = "" },
         },
         sections = {
           lualine_a = { "mode" },

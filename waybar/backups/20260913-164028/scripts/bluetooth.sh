@@ -30,7 +30,7 @@ print_json() {
 }
 
 fallback_json() {
-  print_json "󰂲 BT" "Bluetooth unavailable" "off"
+  print_json "󰂲 BT" "Bluetooth indisponible" "off"
 }
 
 print_cached_or_fallback() {
@@ -292,13 +292,13 @@ build_tooltip() {
   local prefix=""
 
   if [[ "${powered}" -eq 0 ]]; then
-    tooltip="Bluetooth off"
+    tooltip="Bluetooth eteint"
   else
-    tooltip="Bluetooth on"
+    tooltip="Bluetooth actif"
   fi
 
   if (( total == 0 )); then
-    tooltip+=$'\n'"No paired devices"
+    tooltip+=$'\n'"Aucun appareil appaire"
     printf '%s\n' "${tooltip}"
     return
   fi
@@ -311,12 +311,12 @@ build_tooltip() {
 
   if (( total == 1 )); then
     if (( connected == 1 )); then
-      tooltip+=$'\n'"Click to disconnect ${device_names[0]}"
+      tooltip+=$'\n'"Clic: deconnecter ${device_names[0]}"
     else
-      tooltip+=$'\n'"Click to connect ${device_names[0]}"
+      tooltip+=$'\n'"Clic: connecter ${device_names[0]}"
     fi
   else
-    tooltip+=$'\n'"Click to select a device"
+    tooltip+=$'\n'"Clic: choisir un appareil"
   fi
 
   printf '%s\n' "${tooltip}"
@@ -339,17 +339,17 @@ status_text() {
 
   if (( total == 1 )); then
     if (( connected == 1 )); then
-      printf '󰂱 %s\n' "BT"
+      printf '󰂱 %s\n' "$(truncate_name "${device_names[0]}")"
     else
-      printf '󰂯 %s\n' "BT"
+      printf '󰂯 %s\n' "$(truncate_name "${device_names[0]}")"
     fi
     return
   fi
 
   if (( connected > 0 )); then
-    printf '󰂱 BT %s\n' "${connected}"
+    printf '󰂱 BT %s\n' "${total}"
   else
-    printf '󰂯 BT\n'
+    printf '󰂯 BT %s\n' "${total}"
   fi
 }
 
@@ -389,8 +389,8 @@ select_device() {
   local entries=()
 
   for i in "${!device_macs[@]}"; do
-    state="disconnected"
-    [[ "${device_connected[i]}" -eq 1 ]] && state="connected"
+    state="deconnecte"
+    [[ "${device_connected[i]}" -eq 1 ]] && state="connecte"
     entries+=("${state} | ${device_names[i]} | ${device_macs[i]}")
   done
 
@@ -410,16 +410,16 @@ toggle_device() {
 
   if device_is_connected "${mac}" && [[ -n "${bluetooth_sink}" ]]; then
     if ! switch_to_speakers_audio; then
-      notify "Speaker output not found"
+      notify "Sortie enceintes introuvable"
     fi
 
     btctl_action disconnect "${mac}" >/dev/null
     if wait_for_connection_state "${mac}" 0; then
-      notify "Speakers active — ${name} disconnected"
+      notify "Enceintes actives — ${name} deconnecte"
       return 0
     fi
 
-    notify "Unable to verify disconnection: ${name}"
+    notify "Deconnexion inverifiable: ${name}"
     return 1
   fi
 
@@ -427,15 +427,15 @@ toggle_device() {
   btctl_action connect "${mac}" "${audio_sink_uuid}" >/dev/null
   if wait_for_connection_state "${mac}" 1; then
     if switch_to_bluetooth_audio "${mac}"; then
-      notify "Headset active: ${name}"
+      notify "Casque actif: ${name}"
       return 0
     fi
 
-    notify "${name} connected, but audio output not found"
+    notify "${name} connecte, mais sortie audio introuvable"
     return 1
   fi
 
-  notify "Connection failed: ${name}"
+  notify "Connexion impossible: ${name}"
   return 1
 }
 
@@ -448,7 +448,7 @@ build_status_output() {
   local class=""
 
   if ! controller_available; then
-    print_json "󰂲 BT" "No Bluetooth controller available" "off"
+    print_json "󰂲 BT" "Aucun controleur Bluetooth disponible" "off"
     return
   fi
 
@@ -477,14 +477,14 @@ handle_toggle() {
   local success=1
 
   if ! controller_available; then
-    notify "No Bluetooth controller available"
+    notify "Aucun controleur Bluetooth disponible"
     print_status >/dev/null
     refresh_waybar
     exit 0
   fi
 
   if ! is_powered && ! power_on; then
-    notify "Unable to enable Bluetooth"
+    notify "Impossible d'activer le Bluetooth"
     print_status >/dev/null
     refresh_waybar
     exit 0
@@ -494,7 +494,7 @@ handle_toggle() {
   total="$(device_count)"
 
   if (( total == 0 )); then
-    notify "No paired Bluetooth devices"
+    notify "Aucun appareil Bluetooth appaire"
     print_status >/dev/null
     refresh_waybar
     exit 0

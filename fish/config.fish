@@ -31,37 +31,37 @@ if status is-interactive
     set -g fish_greeting
 
     # Palette Kawase Hasui commune à Ghostty, foot, Kitty, tmux et Starship.
-    set -g fish_color_normal 0a0d14
-    set -g fish_color_command 135a6a --bold
-    set -g fish_color_keyword 55284a --bold
-    set -g fish_color_quote 2d5520
-    set -g fish_color_redirection 866428
-    set -g fish_color_end 8a2210
-    set -g fish_color_error a3321a --bold
-    set -g fish_color_param 0a0d14
-    set -g fish_color_option 866428
-    set -g fish_color_comment 58524a --italics
-    set -g fish_color_operator 8a2210
-    set -g fish_color_escape 1e6058
-    set -g fish_color_autosuggestion 58524a
-    set -g fish_color_valid_path 135a6a --underline
-    set -g fish_color_search_match 0a0d14 --background=b0cdd2
-    set -g fish_color_cancel a3321a
+    set -g fish_color_normal 3c3e34
+    set -g fish_color_command 35666d --bold
+    set -g fish_color_keyword 855669 --bold
+    set -g fish_color_quote 53673d
+    set -g fish_color_redirection 7c573c
+    set -g fish_color_end a5543c
+    set -g fish_color_error 943f32 --bold
+    set -g fish_color_param 3c3e34
+    set -g fish_color_option 7c573c
+    set -g fish_color_comment 736f63 --italics
+    set -g fish_color_operator a5543c
+    set -g fish_color_escape 426b63
+    set -g fish_color_autosuggestion 736f63
+    set -g fish_color_valid_path 35666d --underline
+    set -g fish_color_search_match 3c3e34 --background=d8d0b9
+    set -g fish_color_cancel 943f32
 
     # Pager sans le bloc cyan peu lisible visible sur la capture.
     set -g fish_pager_color_background normal
-    set -g fish_pager_color_progress 135a6a --bold
-    set -g fish_pager_color_prefix 8a2210 --bold --underline
-    set -g fish_pager_color_completion 0a0d14
-    set -g fish_pager_color_description 866428 --italics
+    set -g fish_pager_color_progress 35666d --bold
+    set -g fish_pager_color_prefix a5543c --bold --underline
+    set -g fish_pager_color_completion 3c3e34
+    set -g fish_pager_color_description 7c573c --italics
     set -g fish_pager_color_secondary_background normal
     set -g fish_pager_color_secondary_prefix $fish_pager_color_prefix
     set -g fish_pager_color_secondary_completion $fish_pager_color_completion
     set -g fish_pager_color_secondary_description $fish_pager_color_description
-    set -g fish_pager_color_selected_background --background=b0cdd2
-    set -g fish_pager_color_selected_prefix 8a2210 --bold --underline
-    set -g fish_pager_color_selected_completion 0a0d14
-    set -g fish_pager_color_selected_description 55284a --italics
+    set -g fish_pager_color_selected_background --background=d8d0b9
+    set -g fish_pager_color_selected_prefix a5543c --bold --underline
+    set -g fish_pager_color_selected_completion 3c3e34
+    set -g fish_pager_color_selected_description 855669 --italics
 
     command -q starship; and starship init fish | source
     command -q zoxide; and zoxide init fish | source
