@@ -48,6 +48,7 @@ eza
 fastfetch
 fd
 ffmpegthumbnailer
+ffuf
 firefox
 fish
 flatpak
@@ -138,6 +139,7 @@ noto-fonts
 noto-fonts-emoji
 npm
 ntfs-3g
+nuclei
 nushell
 nvme-cli
 nvtop
@@ -184,6 +186,7 @@ s-tui
 satty
 scrcpy
 sddm-git
+seclists
 shellcheck
 signal-desktop
 sioyek
@@ -198,6 +201,7 @@ suwayomi-server-bin
 syncthing
 tesseract-data-eng
 tesseract-data-fra
+testssl.sh
 texlive-bin
 texlive-binextra
 thorium-browser-bin
@@ -233,6 +237,7 @@ wireplumber
 wl-clipboard
 wlogout
 wlsunset
+wpscan
 wrk
 wtype
 xdelta3
@@ -282,6 +287,7 @@ yasm
 ydotool
 yt-dlp
 yt-dlp-drop-in
+zaproxy
 zathura
 zathura-pdf-mupdf
 zip

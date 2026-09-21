@@ -1,0 +1,3 @@
+# This file contains fish universal variable definitions.
+# VERSION: 3.0
+SETUVAR --export OPENROUTER_API_KEY:sk\x2dor\x2dv1\x2d973a7dc07864c25b25b146ea76c85886b0d3dd89b42603ba2f5d9cbc94146422
