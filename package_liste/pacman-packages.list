@@ -105,6 +105,7 @@ lib32-gnutls
 lib32-libpulse
 lib32-mpg123
 lib32-openal
+lib32-pipewire-jack
 lib32-v4l-utils
 lib32-vulkan-radeon
 libayatana-appindicator
