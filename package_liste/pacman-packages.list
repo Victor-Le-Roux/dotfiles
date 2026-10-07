@@ -63,6 +63,7 @@ gcc13-libs
 gdb
 ghostty
 git
+github-cli
 glances
 glew
 glfw
