@@ -239,36 +239,34 @@ function M.setup()
   end
 
   local ok, rose_pine = pcall(require, "rose-pine")
-  if not ok then
-    vim.o.background = light_theme and "light" or "dark"
-    vim.cmd("colorscheme habamax")
-    apply_ui_colors(pick_ui_palette(kitty, light_theme))
-    apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
-    return
-  end
+  local colorscheme = ok and "rose-pine" or "habamax"
+
+  -- Reapply the palette whenever this colorscheme is (re)loaded, so that
+  -- `:colorscheme rose-pine` keeps the overrides; other schemes stay untouched.
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    group = vim.api.nvim_create_augroup("vle_theme_overrides", { clear = true }),
+    pattern = colorscheme .. "*",
+    callback = function()
+      apply_ui_colors(pick_ui_palette(kitty, light_theme))
+      apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
+    end,
+  })
 
   vim.o.background = light_theme and "light" or "dark"
 
-  rose_pine.setup({
-    variant = light_theme and "dawn" or "moon",
-    dark_variant = "moon",
-    disable_background = false,
-    disable_float_background = false,
-    styles = {
-      transparency = false,
-    },
-    highlight_groups = {
-      CursorLine = { bg = light_theme and "#d8d2bf" or "#2a273f" },
-      CursorLineNr = { fg = "#2f9caf", bold = true },
-      Visual = { bg = light_theme and "#c8dadd" or "#393552" },
-      Search = { bg = "#79aeb9", fg = light_theme and "#1b1f2a" or "#191724" },
-      IncSearch = { bg = "#2f9caf", fg = light_theme and "#e8e3d3" or "#e0def4" },
-    },
-  })
+  if ok then
+    rose_pine.setup({
+      variant = light_theme and "dawn" or "moon",
+      dark_variant = "moon",
+      disable_background = false,
+      disable_float_background = false,
+      styles = {
+        transparency = false,
+      },
+    })
+  end
 
-  vim.cmd("colorscheme rose-pine")
-  apply_ui_colors(pick_ui_palette(kitty, light_theme))
-  apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
+  vim.cmd.colorscheme(colorscheme)
 end
 
 return M

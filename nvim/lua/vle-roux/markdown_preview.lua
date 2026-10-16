@@ -81,19 +81,34 @@ local function source_path(bufnr)
   return state.temp_file
 end
 
-local function render_lines(bufnr, width)
+local function has_glow()
+  if vim.fn.executable("glow") == 1 then
+    return true
+  end
+  vim.notify("Markdown preview needs glow (pacman -S glow)", vim.log.levels.WARN)
+  return false
+end
+
+-- Bumped on every render so that only the latest glow result is displayed.
+local render_generation = 0
+
+local function render_lines(bufnr, width, callback)
   local path = source_path(bufnr)
-  local result = vim.system({ "glow", "-s", "auto", "-w", tostring(width), path }, { text = true }):wait()
+  local ok, err = pcall(vim.system, { "glow", "-s", "auto", "-w", tostring(width), path }, { text = true }, function(result)
+    vim.schedule(function()
+      if result.code ~= 0 then
+        callback(nil, (result.stderr ~= "" and result.stderr) or "glow failed")
+      elseif result.stdout == "" then
+        callback({ "" })
+      else
+        callback(vim.split(result.stdout, "\n", { plain = true, trimempty = false }))
+      end
+    end)
+  end)
 
-  if result.code ~= 0 then
-    return nil, (result.stderr ~= "" and result.stderr) or "glow failed"
+  if not ok then
+    callback(nil, tostring(err))
   end
-
-  if result.stdout == "" then
-    return { "" }, nil
-  end
-
-  return vim.split(result.stdout, "\n", { plain = true, trimempty = false }), nil
 end
 
 local function configure_preview_buffer(bufnr)
@@ -186,23 +201,33 @@ function M.refresh(bufnr)
     return
   end
 
-  vim.api.nvim_win_set_config(state.preview_win, preview_config())
-
-  local lines, err = render_lines(bufnr, preview_width())
-  if not lines then
-    vim.notify("Markdown preview failed: " .. err, vim.log.levels.ERROR)
+  if not has_glow() then
+    M.close()
     return
   end
 
+  vim.api.nvim_win_set_config(state.preview_win, preview_config())
   state.source_buf = bufnr
 
-  vim.bo[state.preview_buf].modifiable = true
-  vim.api.nvim_buf_set_lines(state.preview_buf, 0, -1, false, lines)
-  vim.bo[state.preview_buf].modifiable = false
-  vim.api.nvim_buf_set_name(state.preview_buf, "Markdown Preview")
-  vim.api.nvim_win_set_buf(state.preview_win, state.preview_buf)
-  configure_preview_window(state.preview_win)
-  sync_view(bufnr)
+  render_generation = render_generation + 1
+  local generation = render_generation
+  render_lines(bufnr, preview_width(), function(lines, err)
+    if generation ~= render_generation or not valid_buf(state.preview_buf) or not valid_win(state.preview_win) then
+      return
+    end
+    if not lines then
+      vim.notify("Markdown preview failed: " .. err, vim.log.levels.ERROR)
+      return
+    end
+
+    vim.bo[state.preview_buf].modifiable = true
+    vim.api.nvim_buf_set_lines(state.preview_buf, 0, -1, false, lines)
+    vim.bo[state.preview_buf].modifiable = false
+    vim.api.nvim_buf_set_name(state.preview_buf, "Markdown Preview")
+    vim.api.nvim_win_set_buf(state.preview_win, state.preview_buf)
+    configure_preview_window(state.preview_win)
+    sync_view(bufnr)
+  end)
 end
 
 function M.open(bufnr)
@@ -214,6 +239,10 @@ function M.open(bufnr)
 
   if valid_win(state.preview_win) and state.source_buf == bufnr then
     M.refresh(bufnr)
+    return
+  end
+
+  if not has_glow() then
     return
   end
 

@@ -1,6 +1,6 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
+if not vim.uv.fs_stat(lazypath) then
+  local output = vim.fn.system({
     "git",
     "clone",
     "--filter=blob:none",
@@ -8,6 +8,13 @@ if not vim.loop.fs_stat(lazypath) then
     "--branch=stable",
     lazypath,
   })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Impossible de cloner lazy.nvim :\n", "ErrorMsg" },
+      { output, "WarningMsg" },
+    }, true, {})
+    return
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -58,9 +65,16 @@ end
 
 require("lazy").setup({
   {
+    -- Loaded at startup so Mason's bin directory (tree-sitter, prettierd...)
+    -- is on PATH before other plugins look for those tools.
     "williamboman/mason.nvim",
-    cmd = { "Mason", "MasonUpdate", "MasonInstall", "MasonUninstall" },
+    lazy = false,
+    priority = 900,
     opts = {},
+    config = function(_, opts)
+      require("mason").setup(opts)
+      require("vle-roux.tools").ensure_installed()
+    end,
   },
   {
     "neovim/nvim-lspconfig",
@@ -68,97 +82,68 @@ require("lazy").setup({
     dependencies = {
       { "williamboman/mason.nvim" },
       { "williamboman/mason-lspconfig.nvim" },
-      { "nvimtools/none-ls.nvim" },
-      { "jay-babu/mason-null-ls.nvim" },
-      { "hrsh7th/nvim-cmp" },
-      { "hrsh7th/cmp-buffer" },
-      { "hrsh7th/cmp-path" },
-      { "saadparwaiz1/cmp_luasnip" },
-      { "hrsh7th/cmp-nvim-lsp" },
-      { "hrsh7th/cmp-nvim-lua" },
-      { "L3MON4D3/LuaSnip", version = "2.*" },
-      { "honza/vim-snippets" },
+      { "saghen/blink.cmp" },
     },
     config = function()
       local Remap = require("vle-roux.keymap")
       local inoremap = Remap.inoremap
       local nnoremap = Remap.nnoremap
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      local capabilities = require("blink.cmp").get_lsp_capabilities()
       local mason_lspconfig = require("mason-lspconfig")
-      local cmp = require("cmp")
 
-      local format_servers = {
-        gopls = { go = true },
-        pylsp = { python = true },
-        clangd = { cpp = true, c = true },
-        ["null-ls"] = {
-          lua = true,
-          json = true,
-          javascript = true,
-          typescript = true,
-          typescriptreact = true,
-          markdown = true,
-          css = true,
-          sass = true,
-          scss = true,
-          txt = true,
-          text = true,
-          html = true,
-          tex = true,
-          haskell = true,
-          plaintex = true,
+      local severity = vim.diagnostic.severity
+      vim.diagnostic.config({
+        severity_sort = true,
+        underline = true,
+        update_in_insert = false,
+        virtual_text = { spacing = 2, source = "if_many", prefix = "●" },
+        float = { border = "rounded", source = "if_many" },
+        signs = {
+          text = {
+            [severity.ERROR] = "E",
+            [severity.WARN] = "W",
+            [severity.INFO] = "I",
+            [severity.HINT] = "H",
+          },
         },
-      }
+        jump = {
+          on_jump = function(diagnostic, bufnr)
+            if diagnostic then
+              vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+            end
+          end,
+        },
+      })
 
-      local function has_format_rule(filetype)
-        for _, rules in pairs(format_servers) do
-          if rules[filetype] then
-            return true
-          end
+      local function on_attach(client, bufnr)
+        local function opts(desc)
+          return { buffer = bufnr, silent = true, desc = desc }
         end
-        return false
-      end
 
-      local function on_attach(_, bufnr)
-        local opts = { buffer = bufnr, silent = true }
+        -- basedpyright provides hover for Python; ruff only lints and formats.
+        if client.name == "ruff" then
+          client.server_capabilities.hoverProvider = false
+        end
 
-        nnoremap("<leader>.", vim.lsp.buf.code_action, opts)
-        nnoremap("<leader>rn", vim.lsp.buf.rename, opts)
-        nnoremap("<leader>fi", vim.lsp.buf.implementation, opts)
-        nnoremap("<leader>fr", vim.lsp.buf.references, opts)
-        nnoremap("<leader>ff", vim.lsp.buf.definition, opts)
-        nnoremap("<leader>fF", vim.lsp.buf.declaration, opts)
-        nnoremap("<leader>fs", "<Cmd>Telescope lsp_dynamic_workspace_symbols<CR>", opts)
-        nnoremap("<leader>fd", "<Cmd>Telescope diagnostics bufnr=0<CR>", opts)
+        nnoremap("<leader>.", vim.lsp.buf.code_action, opts("Code action"))
+        nnoremap("<leader>rn", vim.lsp.buf.rename, opts("Rename symbol"))
+        nnoremap("<leader>fi", vim.lsp.buf.implementation, opts("Go to implementation"))
+        nnoremap("<leader>fr", vim.lsp.buf.references, opts("References"))
+        nnoremap("<leader>ff", vim.lsp.buf.definition, opts("Go to definition"))
+        nnoremap("<leader>fF", vim.lsp.buf.declaration, opts("Go to declaration"))
+        nnoremap("<leader>fs", "<Cmd>Telescope lsp_dynamic_workspace_symbols<CR>", opts("Workspace symbols"))
+        nnoremap("<leader>fd", "<Cmd>Telescope diagnostics bufnr=0<CR>", opts("Buffer diagnostics"))
         nnoremap("<leader>fh", function()
           switch_source_header(bufnr)
-        end, opts)
-        nnoremap("<leader>fci", vim.lsp.buf.incoming_calls, opts)
-        nnoremap("<leader>fco", vim.lsp.buf.outgoing_calls, opts)
-        nnoremap("K", vim.lsp.buf.hover, opts)
-        inoremap("<C-h>", vim.lsp.buf.signature_help, opts)
-        inoremap("<C-j>", vim.lsp.buf.signature_help, opts)
-        nnoremap("<leader>,", vim.diagnostic.setloclist, opts)
-        nnoremap("<leader>m", function()
-          local filetype = vim.bo[bufnr].filetype
-          local with_filter = has_format_rule(filetype)
-          vim.lsp.buf.format({
-            bufnr = bufnr,
-            async = false,
-            timeout_ms = 10000,
-            filter = with_filter and function(client)
-              local rules = format_servers[client.name]
-              return rules and rules[filetype] or false
-            end or nil,
-          })
-        end, opts)
-
+        end, opts("Switch source / header"))
+        nnoremap("<leader>fci", vim.lsp.buf.incoming_calls, opts("Incoming calls"))
+        nnoremap("<leader>fco", vim.lsp.buf.outgoing_calls, opts("Outgoing calls"))
+        inoremap("<C-j>", vim.lsp.buf.signature_help, opts("Signature help"))
+        nnoremap("<leader>vi", function()
+          local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+          vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+        end, opts("Toggle inlay hints"))
       end
-
-      local clangd_capabilities = vim.tbl_deep_extend("force", capabilities, {
-        offsetEncoding = { "utf-8", "utf-16" },
-        offset_encoding = { "utf-8", "utf-16" },
-      })
 
       vim.lsp.config("*", {
         on_attach = on_attach,
@@ -170,6 +155,10 @@ require("lazy").setup({
           "--background-index",
           "--clang-tidy",
           "--completion-style=detailed",
+          -- Never add #include lines on completion (42 norm, explicit headers).
+          "--header-insertion=never",
+          "--function-arg-placeholders",
+          "--pch-storage=memory",
         },
         root_markers = {
           ".clangd",
@@ -184,17 +173,32 @@ require("lazy").setup({
           ".git",
         },
         before_init = function(init_params, config)
-          local fallback_flags = require("vle-roux.c_tools").clangd_fallback_flags(config.root_dir)
-          if #fallback_flags > 0 then
-            init_params.initializationOptions = vim.tbl_deep_extend(
-              "force",
-              init_params.initializationOptions or {},
-              { fallbackFlags = fallback_flags }
-            )
+          local options = require("vle-roux.c_tools").clangd_init_options(config.root_dir)
+          if next(options) then
+            init_params.initializationOptions =
+              vim.tbl_deep_extend("force", init_params.initializationOptions or {}, options)
           end
         end,
-        on_attach = on_attach,
-        capabilities = clangd_capabilities,
+      })
+
+      vim.lsp.config("basedpyright", {
+        settings = {
+          basedpyright = {
+            -- ruff organizes imports; "standard" avoids basedpyright's very
+            -- strict default checks.
+            disableOrganizeImports = true,
+            analysis = { typeCheckingMode = "standard" },
+          },
+        },
+        -- Mutate the settings table in place: the client keeps a reference
+        -- to it and answers the server's configuration requests from it.
+        before_init = function(_, config)
+          local python = require("vle-roux.python").venv_python(config.root_dir)
+          if python then
+            config.settings.python = config.settings.python or {}
+            config.settings.python.pythonPath = python
+          end
+        end,
       })
 
       mason_lspconfig.setup({
@@ -206,94 +210,97 @@ require("lazy").setup({
       for _, server_name in ipairs(mason_lspconfig.get_installed_servers()) do
         enabled_servers[server_name] = true
       end
-      for server_name, executable in pairs({ clangd = "clangd", gopls = "gopls", pylsp = "pylsp" }) do
-        if vim.fn.executable(executable) == 1 then
-          enabled_servers[server_name] = true
-        end
+      -- clangd comes from the system, not from Mason.
+      if vim.fn.executable("clangd") == 1 then
+        enabled_servers.clangd = true
       end
       for server_name in pairs(enabled_servers) do
         vim.lsp.enable(server_name)
       end
-
-      local cmp_select = { behavior = cmp.SelectBehavior.Select }
-
-      cmp.setup({
-        preselect = cmp.PreselectMode.None,
-        snippet = {
-          expand = function(args)
-            require("luasnip").lsp_expand(args.body)
-          end,
-        },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
-          ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
-          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-e>"] = cmp.mapping.abort(),
-        }),
-        sources = {
-          { name = "nvim_lsp" },
-          { name = "luasnip" },
-          { name = "nvim_lua" },
-          { name = "buffer" },
-          { name = "path" },
-        },
-        window = {
-          completion = { border = "rounded" },
-          documentation = { border = "rounded" },
-        },
-      })
-
-      local null_ls = require("null-ls")
-
-      local txt_formatter = {
-        method = null_ls.methods.FORMATTING,
-        filetypes = { "txt", "text" },
-        generator = null_ls.formatter({
-          command = "txt-format",
-          args = { "$FILENAME" },
-          to_stdin = true,
-          from_stderr = true,
-        }),
-      }
-
-      local null_sources = {}
-      if vim.fn.executable("txt-format") == 1 then
-        table.insert(null_sources, txt_formatter)
-      end
-
-      null_ls.setup({
-        on_attach = on_attach,
-        sources = null_sources,
-      })
-
-      require("mason-null-ls").setup({
-        ensure_installed = nil,
-        automatic_installation = false,
-        handlers = {},
-      })
     end,
   },
 
   {
-    "numToStr/Comment.nvim",
-    event = "VeryLazy",
-    dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" },
+    -- Formatting: c_formatter_42 for norm files, clang-format, ruff, stylua
+    -- and prettierd otherwise, the LSP when none of them is available.
+    "stevearc/conform.nvim",
+    event = "BufWritePre",
+    cmd = { "ConformInfo" },
+    keys = {
+      {
+        "<leader>m",
+        function()
+          require("conform").format({ async = false, timeout_ms = 10000, lsp_format = "fallback" })
+        end,
+        desc = "Format buffer",
+      },
+    },
     opts = function()
-      local ok_setup, ts_context_commentstring_core = pcall(require, "ts_context_commentstring")
-      if ok_setup then
-        ts_context_commentstring_core.setup({
-          enable_autocmd = false,
-        })
-      end
-
-      local ok, ts_context_commentstring = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
-      if ok then
-        return { pre_hook = ts_context_commentstring.create_pre_hook() }
-      end
-      return {}
+      local prettier = { "prettierd" }
+      return {
+        formatters_by_ft = {
+          c = function(bufnr)
+            if require("vle-roux.norm42").enabled(bufnr) then
+              -- Never fall back to clangd: its style would break the norm.
+              return { "c_formatter_42", lsp_format = "never" }
+            end
+            return { "clang-format" }
+          end,
+          cpp = { "clang-format" },
+          python = { "ruff_format" },
+          lua = { "stylua" },
+          javascript = prettier,
+          javascriptreact = prettier,
+          typescript = prettier,
+          typescriptreact = prettier,
+          json = prettier,
+          jsonc = prettier,
+          css = prettier,
+          scss = prettier,
+          html = prettier,
+          markdown = prettier,
+          yaml = prettier,
+        },
+        formatters = {
+          c_formatter_42 = { command = "c_formatter_42", stdin = true },
+        },
+        -- Off by default; :FormatOnSave toggles it.
+        format_on_save = function()
+          if vim.g.format_on_save then
+            return { timeout_ms = 3000, lsp_format = "fallback" }
+          end
+        end,
+      }
     end,
   },
+  {
+    -- norminette diagnostics on files following the 42 norm.
+    "mfussenegger/nvim-lint",
+    event = { "BufReadPost", "BufNewFile" },
+    config = function()
+      local norm42 = require("vle-roux.norm42")
+      require("lint").linters.norminette = norm42.linter()
+
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+        group = vim.api.nvim_create_augroup("vle_lint", { clear = true }),
+        callback = function(args)
+          norm42.lint(args.buf)
+        end,
+        desc = "Run norminette on norm files",
+      })
+    end,
+  },
+  {
+    -- Neovim API types for lua_ls while editing this configuration.
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+      },
+    },
+  },
+
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -305,12 +312,76 @@ require("lazy").setup({
       autopairs.remove_rule('"')
       autopairs.remove_rule("`")
 
-      local ok_cmp, cmp = pcall(require, "cmp")
-      if ok_cmp then
-        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-      end
     end,
+  },
+  {
+    "saghen/blink.cmp",
+    version = "1.*",
+    event = { "InsertEnter", "CmdlineEnter" },
+    dependencies = {
+      {
+        "L3MON4D3/LuaSnip",
+        version = "2.*",
+        dependencies = { "honza/vim-snippets" },
+        config = function()
+          local luasnip = require("luasnip")
+          luasnip.config.setup({
+            -- Leave the snippet once the cursor moves out of it, so <C-h>
+            -- falls back to backspace instead of jumping back.
+            region_check_events = "CursorMoved",
+            delete_check_events = "TextChanged",
+          })
+          require("luasnip.loaders.from_snipmate").lazy_load()
+
+          vim.keymap.set({ "i", "s" }, "<C-l>", function()
+            if luasnip.jumpable(1) then
+              luasnip.jump(1)
+            end
+          end, { silent = true, desc = "Snippet: next field" })
+          vim.keymap.set({ "i", "s" }, "<C-h>", function()
+            if luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              vim.api.nvim_feedkeys(vim.keycode("<BS>"), "n", false)
+            end
+          end, { silent = true, desc = "Snippet: previous field (or backspace)" })
+        end,
+      },
+    },
+    opts = {
+      -- Same keys as before: <C-n>/<C-p> select, <C-y> accept, <C-Space>
+      -- open, <C-e> close; plus <C-k> to toggle the signature.
+      keymap = { preset = "default" },
+      appearance = { nerd_font_variant = "mono" },
+      -- Small windows keep the code visible: a short menu, documentation
+      -- only after a pause and narrow enough to sit beside the menu, and a
+      -- short signature. Noice leaves signature help to blink (no duplicate).
+      completion = {
+        list = { selection = { preselect = false, auto_insert = false } },
+        menu = { border = "rounded", max_height = 8 },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 400,
+          window = { border = "rounded", max_height = 12, desired_min_width = 30 },
+        },
+      },
+      signature = { enabled = true, window = { border = "rounded", max_height = 4 } },
+      snippets = { preset = "luasnip" },
+      sources = {
+        default = { "lsp", "path", "snippets", "buffer" },
+        per_filetype = {
+          lua = { inherit_defaults = true, "lazydev" },
+          sql = { "dadbod", "snippets", "buffer" },
+          mysql = { "dadbod", "snippets", "buffer" },
+          plsql = { "dadbod", "snippets", "buffer" },
+        },
+        providers = {
+          dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },
+          lazydev = { name = "LazyDev", module = "lazydev.integrations.blink", score_offset = 100 },
+        },
+      },
+      fuzzy = { implementation = "prefer_rust_with_warning" },
+    },
   },
   { "kylechui/nvim-surround", event = "VeryLazy", opts = {} },
   { "tikhomirov/vim-glsl", ft = { "glsl", "vert", "frag", "tesc", "tese", "geom", "comp" } },
@@ -320,9 +391,9 @@ require("lazy").setup({
     version = "*",
     cmd = { "NvimTreeToggle", "NvimTreeFindFileToggle", "NvimTreeCollapse" },
     keys = {
-      { "<leader><tab>", "<Cmd>NvimTreeToggle<CR>" },
-      { "<leader>f<tab>", "<Cmd>NvimTreeFindFile!<CR>" },
-      { "<leader>z", "<Cmd>NvimTreeCollapse<CR>" },
+      { "<leader><tab>", "<Cmd>NvimTreeToggle<CR>", desc = "File tree" },
+      { "<leader>f<tab>", "<Cmd>NvimTreeFindFile!<CR>", desc = "Reveal file in tree" },
+      { "<leader>z", "<Cmd>NvimTreeCollapse<CR>", desc = "Collapse file tree" },
     },
     dependencies = { { "nvim-tree/nvim-web-devicons" } },
     config = function()
@@ -340,12 +411,17 @@ require("lazy").setup({
         view = {
           float = {
             enable = true,
-            open_win_config = {
-              width = math.floor(vim.o.columns * 0.8),
-              height = vim.o.lines - 6,
-              row = 2,
-              col = math.floor(vim.o.columns * 0.1),
-            },
+            -- A function so the float follows the current editor size.
+            open_win_config = function()
+              return {
+                relative = "editor",
+                border = "rounded",
+                width = math.floor(vim.o.columns * 0.8),
+                height = vim.o.lines - 6,
+                row = 2,
+                col = math.floor(vim.o.columns * 0.1),
+              }
+            end,
           },
         },
         actions = { open_file = { quit_on_open = true } },
@@ -462,14 +538,17 @@ require("lazy").setup({
     config = function()
       local harpoon = require("harpoon")
 
+      local function absolute(path)
+        return vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
+      end
+
       local function sync(evt, list)
-        local file = evt.file
+        local file = absolute(evt.file)
         local cursor = vim.api.nvim_win_get_cursor(0)
         local row, col = cursor[1], cursor[2]
 
         for _, item in pairs(list.items) do
-          local relative = vim.loop.cwd() .. "/" .. item.value
-          if relative == file then
+          if absolute(item.value) == file then
             item.context = { row = row, col = col }
           end
         end
@@ -491,6 +570,17 @@ require("lazy").setup({
     "nvim-telescope/telescope.nvim",
     cmd = { "Telescope" },
     init = function()
+      -- Code actions and other vim.ui.select menus use Telescope: the first
+      -- call loads it, and the ui-select extension then replaces this stub.
+      local builtin_select = vim.ui.select
+      vim.ui.select = function(...)
+        -- Restored first: if Telescope fails to load, the built-in menu is
+        -- used instead of calling this stub forever.
+        vim.ui.select = builtin_select
+        require("lazy").load({ plugins = { "telescope.nvim" } })
+        return vim.ui.select(...)
+      end
+
       local group = vim.api.nvim_create_augroup("vle_startup_file_picker", { clear = true })
 
       local function allowed_directories()
@@ -559,16 +649,22 @@ require("lazy").setup({
             return
           end
 
+          -- The picker only opens without arguments or with a single directory.
+          local argc = vim.fn.argc()
+          if argc > 1 or (argc == 1 and vim.fn.isdirectory(vim.fn.argv(0)) == 0) then
+            return
+          end
+
           local directories = allowed_directories()
           if #directories == 0 then
             vim.notify(
-              "Aucun dossier autorisé. Configure TZF_SEARCH_DIRS dans ~/.config/fish/config.fish puis recharge Fish.",
+              "Aucun dossier autorisé. Configure NVIM_SEARCH_DIRS dans ~/.config/fish/config.fish puis recharge Fish.",
               vim.log.levels.WARN
             )
             return
           end
 
-          if vim.fn.argc() == 0 then
+          if argc == 0 then
             local current_directory = vim.fs.normalize(vim.fn.getcwd())
             if not is_allowed(current_directory, directories) then
               vim.notify(
@@ -580,26 +676,18 @@ require("lazy").setup({
             directories = { current_directory }
           end
 
-          local directory_argument = false
-          if vim.fn.argc() == 1 then
-            local argument = vim.fn.argv(0)
-            if vim.fn.isdirectory(argument) == 1 then
-              local directory = vim.fs.normalize(vim.fn.fnamemodify(argument, ":p"))
-              directory_argument = true
-              if is_allowed(directory, directories) then
-                directories = { directory }
-                vim.api.nvim_set_current_dir(directory)
-              else
-                vim.notify(
-                  "Dossier hors des racines autorisées : recherche limitée à NVIM_SEARCH_DIRS.",
-                  vim.log.levels.WARN
-                )
-              end
+          local directory_argument = argc == 1
+          if directory_argument then
+            local directory = vim.fs.normalize(vim.fn.fnamemodify(vim.fn.argv(0), ":p"))
+            if is_allowed(directory, directories) then
+              directories = { directory }
+              vim.api.nvim_set_current_dir(directory)
             else
-              return
+              vim.notify(
+                "Dossier hors des racines autorisées : recherche limitée à NVIM_SEARCH_DIRS.",
+                vim.log.levels.WARN
+              )
             end
-          elseif vim.fn.argc() > 1 then
-            return
           end
 
           if directory_argument then
@@ -621,23 +709,28 @@ require("lazy").setup({
         function()
           require("telescope.builtin").find_files()
         end,
+        desc = "Find files",
       },
       {
         "<leader>x",
         function()
           require("telescope.builtin").live_grep()
         end,
+        desc = "Live grep",
       },
       {
         "<leader>b",
         function()
           require("telescope.builtin").buffers()
         end,
+        desc = "Buffers",
       },
     },
     dependencies = {
       { "nvim-lua/plenary.nvim" },
       { "kdheepak/lazygit.nvim" },
+      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      { "nvim-telescope/telescope-ui-select.nvim" },
     },
     config = function()
       local telescope = require("telescope")
@@ -672,8 +765,10 @@ require("lazy").setup({
             "node_modules/",
             "%.git/",
             "%.DS_Store$",
-            "target/",
-            "build/",
+            "^target/",
+            "/target/",
+            "^build/",
+            "/build/",
             "%.o$",
           },
           winblend = 0,
@@ -686,15 +781,13 @@ require("lazy").setup({
           live_grep = { only_sort_text = true },
         },
         extensions = {
-          fzf = {
-            fuzzy = true,
-            override_generic_sorter = true,
-            override_file_sorter = true,
-            case_mode = "smart_case",
-          },
+          fzf = { case_mode = "smart_case" },
+          ["ui-select"] = { require("telescope.themes").get_dropdown() },
         },
       })
 
+      pcall(telescope.load_extension, "fzf")
+      telescope.load_extension("ui-select")
       if vim.fn.executable("lazygit") == 1 then
         pcall(telescope.load_extension, "lazygit")
       end
@@ -713,7 +806,47 @@ require("lazy").setup({
     end,
   },
 
-  { "lewis6991/gitsigns.nvim", event = { "BufReadPre", "BufNewFile" }, opts = {} },
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      on_attach = function(bufnr)
+        local gitsigns = require("gitsigns")
+        local function map(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
+        end
+
+        map("n", "]h", function()
+          gitsigns.nav_hunk("next")
+        end, "Next git hunk")
+        map("n", "[h", function()
+          gitsigns.nav_hunk("prev")
+        end, "Previous git hunk")
+        map("n", "<leader>gp", gitsigns.preview_hunk, "Preview hunk")
+        map("n", "<leader>gs", gitsigns.stage_hunk, "Stage / unstage hunk")
+        map("x", "<leader>gs", function()
+          gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+        end, "Stage / unstage selection")
+        map("n", "<leader>gr", gitsigns.reset_hunk, "Reset hunk")
+        map("n", "<leader>gS", gitsigns.stage_buffer, "Stage buffer")
+        map("n", "<leader>gb", function()
+          gitsigns.blame_line({ full = true })
+        end, "Blame line")
+        map("n", "<leader>gd", gitsigns.diffthis, "Diff against index")
+        map({ "o", "x" }, "ih", gitsigns.select_hunk, "Inside git hunk")
+      end,
+    },
+  },
+  {
+    "sindrets/diffview.nvim",
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
+    keys = {
+      { "<leader>gv", "<Cmd>DiffviewOpen<CR>", desc = "Diff view (working tree)" },
+      { "<leader>gV", "<Cmd>DiffviewFileHistory %<CR>", desc = "File history" },
+      { "<leader>gq", "<Cmd>DiffviewClose<CR>", desc = "Close diff view" },
+    },
+    opts = {},
+  },
   {
     "stevearc/overseer.nvim",
     cmd = {
@@ -731,6 +864,10 @@ require("lazy").setup({
         max_height = 20,
       },
     },
+    config = function(_, opts)
+      require("overseer").setup(opts)
+      require("vle-roux.c_tools").register_templates()
+    end,
   },
   {
     "mfussenegger/nvim-dap",
@@ -743,6 +880,8 @@ require("lazy").setup({
         "rcarriga/nvim-dap-ui",
         dependencies = { "nvim-neotest/nvim-nio" },
       },
+      { "theHamsta/nvim-dap-virtual-text" },
+      { "mfussenegger/nvim-dap-python" },
     },
     cmd = {
       "DapContinue",
@@ -844,33 +983,98 @@ require("lazy").setup({
       local dap = require("dap")
       local dapui = require("dapui")
 
+      local c_tools = require("vle-roux.c_tools")
+
       require("mason-nvim-dap").setup({
-        ensure_installed = { "codelldb" },
+        -- codelldb is installed by tools.lua.
+        ensure_installed = {},
         automatic_installation = false,
         handlers = {
           function(config)
             require("mason-nvim-dap").default_setup(config)
           end,
+          -- Only the adapter: the launch configurations below remember the
+          -- program instead of asking for it every time.
+          codelldb = function(config)
+            config.configurations = {}
+            require("mason-nvim-dap").default_setup(config)
+          end,
+          -- Python is configured by nvim-dap-python below.
+          python = function() end,
         },
       })
 
-      local attach = {
-        type = "codelldb",
-        request = "attach",
-        name = "LLDB: Attach to process",
-        pid = require("dap.utils").pick_process,
-        cwd = "${workspaceFolder}",
+      -- gdb >= 14 speaks DAP natively: often more reliable than lldb for C.
+      if vim.fn.executable("gdb") == 1 then
+        dap.adapters.gdb = {
+          type = "executable",
+          command = "gdb",
+          args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
+        }
+      end
+
+      -- Paths in the debugged program are relative to the project root,
+      -- not to the directory Neovim was started from.
+      local function project_cwd()
+        return c_tools.project_root() or vim.uv.cwd()
+      end
+
+      -- The program and its arguments are asked once, then remembered.
+      local c_configurations = {
+        {
+          type = "codelldb",
+          request = "launch",
+          name = "LLDB : lancer le programme",
+          program = c_tools.dap_program,
+          args = c_tools.dap_args,
+          cwd = project_cwd,
+          stopOnEntry = false,
+          -- Runs in a terminal (dap-ui console) so the program can read stdin.
+          terminal = "integrated",
+        },
+        {
+          type = "codelldb",
+          request = "attach",
+          name = "LLDB: Attach to process",
+          pid = require("dap.utils").pick_process,
+          cwd = project_cwd,
+        },
       }
+      if dap.adapters.gdb then
+        table.insert(c_configurations, {
+          type = "gdb",
+          request = "launch",
+          name = "GDB : lancer le programme",
+          program = c_tools.dap_program,
+          args = c_tools.dap_args,
+          cwd = project_cwd,
+          stopAtBeginningOfMainSubprogram = false,
+        })
+      end
+
       for _, filetype in ipairs({ "c", "cpp" }) do
         dap.configurations[filetype] = dap.configurations[filetype] or {}
-        local has_attach = vim.iter(dap.configurations[filetype]):any(function(config)
-          return config.type == "codelldb" and config.request == "attach"
-        end)
-        if not has_attach then
-          table.insert(dap.configurations[filetype], attach)
+        for _, configuration in ipairs(c_configurations) do
+          local exists = vim.iter(dap.configurations[filetype]):any(function(config)
+            return config.name == configuration.name
+          end)
+          if not exists then
+            table.insert(dap.configurations[filetype], configuration)
+          end
         end
       end
 
+      -- debugpy runs from Mason's venv; the debugged program uses the
+      -- project's virtual environment.
+      local debugpy = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
+      local dap_python = require("dap-python")
+      dap_python.setup(vim.fn.executable(debugpy) == 1 and debugpy or "python3")
+      dap_python.test_runner = "pytest"
+      dap_python.resolve_python = function()
+        return require("vle-roux.python").interpreter()
+      end
+
+      require("nvim-dap-virtual-text").setup({})
       dapui.setup()
       dap.listeners.before.attach.dapui_config = function()
         dapui.open()
@@ -878,12 +1082,8 @@ require("lazy").setup({
       dap.listeners.before.launch.dapui_config = function()
         dapui.open()
       end
-      dap.listeners.before.event_terminated.dapui_config = function()
-        dapui.close()
-      end
-      dap.listeners.before.event_exited.dapui_config = function()
-        dapui.close()
-      end
+      -- The UI stays open when the program ends, so the output and the last
+      -- stack remain readable after a crash. Close it with <leader>du.
     end,
   },
 
@@ -924,18 +1124,11 @@ require("lazy").setup({
     opts = {
       lsp = {
         progress = { enabled = false },
+        -- blink.cmp shows signature help and follows window resizes.
+        signature = { enabled = false },
       },
       presets = {
         long_message_to_split = false,
-      },
-      routes = {
-        {
-          filter = {
-            event = "notify",
-            find = "context_commentstring nvim%-treesitter module is deprecated",
-          },
-          opts = { skip = true },
-        },
       },
     },
   },
@@ -1023,6 +1216,203 @@ require("lazy").setup({
     main = "ibl",
     event = { "BufReadPost", "BufNewFile" },
     opts = {},
+  },
+  {
+    -- The main branch does not support lazy-loading.
+    "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false,
+    build = ":TSUpdate",
+    config = function()
+      require("vle-roux.treesitter").setup()
+    end,
+  },
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    branch = "main",
+    event = "VeryLazy",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("vle-roux.treesitter").setup_textobjects()
+    end,
+  },
+  {
+    "p00f/clangd_extensions.nvim",
+    ft = { "c", "cpp" },
+    keys = {
+      { "<leader>ca", "<Cmd>ClangdAST<CR>", desc = "clangd: AST of the current node", ft = { "c", "cpp" } },
+      { "<leader>ci", "<Cmd>ClangdSymbolInfo<CR>", desc = "clangd: symbol info", ft = { "c", "cpp" } },
+      { "<leader>cH", "<Cmd>ClangdTypeHierarchy<CR>", desc = "clangd: type hierarchy", ft = { "c", "cpp" } },
+    },
+    opts = {},
+  },
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-neotest/neotest-python",
+      "alfaix/neotest-gtest",
+    },
+    keys = {
+      {
+        "<leader>nr",
+        function()
+          require("neotest").run.run()
+        end,
+        desc = "Run nearest test",
+      },
+      {
+        "<leader>nf",
+        function()
+          require("neotest").run.run(vim.fn.expand("%"))
+        end,
+        desc = "Run tests in file",
+      },
+      {
+        "<leader>nd",
+        function()
+          require("neotest").run.run({ strategy = "dap" })
+        end,
+        desc = "Debug nearest test",
+      },
+      {
+        "<leader>nl",
+        function()
+          require("neotest").run.run_last()
+        end,
+        desc = "Re-run last test",
+      },
+      {
+        "<leader>nx",
+        function()
+          require("neotest").run.stop()
+        end,
+        desc = "Stop tests",
+      },
+      {
+        "<leader>ns",
+        function()
+          require("neotest").summary.toggle()
+        end,
+        desc = "Test summary",
+      },
+      {
+        "<leader>no",
+        function()
+          require("neotest").output.open({ enter = true, auto_close = true })
+        end,
+        desc = "Test output",
+      },
+    },
+    config = function()
+      require("neotest").setup({
+        adapters = {
+          require("neotest-python")({
+            runner = "pytest",
+            python = function()
+              return require("vle-roux.python").interpreter()
+            end,
+            dap = { justMyCode = false },
+          }),
+          require("neotest-gtest").setup({}),
+        },
+      })
+    end,
+  },
+  {
+    -- Python REPL (IPython when the environment has it) fed from the buffer.
+    "Vigemus/iron.nvim",
+    ft = "python",
+    cmd = { "IronRepl", "IronRestart", "IronFocus", "IronHide" },
+    config = function()
+      require("iron.core").setup({
+        config = {
+          scratch_repl = true,
+          repl_open_cmd = require("iron.view").split.vertical.botright("40%"),
+          repl_definition = {
+            python = {
+              command = function(meta)
+                return require("vle-roux.python").repl_command(meta.current_bufnr)
+              end,
+              format = require("iron.fts.common").bracketed_paste_python,
+              block_dividers = { "# %%", "#%%" },
+            },
+          },
+        },
+        keymaps = {
+          toggle_repl = "<leader>ir",
+          restart_repl = "<leader>iR",
+          send_motion = "<leader>is",
+          visual_send = "<leader>is",
+          send_line = "<leader>il",
+          send_paragraph = "<leader>ip",
+          send_code_block = "<leader>ib",
+          send_file = "<leader>if",
+          interrupt = "<leader>ic",
+          clear = "<leader>ix",
+          exit = "<leader>iq",
+        },
+      })
+    end,
+  },
+  {
+    "folke/persistence.nvim",
+    event = "BufReadPre",
+    keys = {
+      {
+        "<leader>sr",
+        function()
+          require("persistence").load()
+        end,
+        desc = "Restore session for this directory",
+      },
+      {
+        "<leader>sl",
+        function()
+          require("persistence").load({ last = true })
+        end,
+        desc = "Restore last session",
+      },
+      {
+        "<leader>sd",
+        function()
+          require("persistence").stop()
+        end,
+        desc = "Don't save this session",
+      },
+    },
+    opts = {},
+  },
+  {
+    "folke/trouble.nvim",
+    cmd = { "Trouble" },
+    keys = {
+      { "<leader>,", "<Cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Buffer diagnostics" },
+      { "<leader>;", "<Cmd>Trouble diagnostics toggle<CR>", desc = "Project diagnostics" },
+      { "<leader>fq", "<Cmd>Trouble qflist toggle<CR>", desc = "Quickfix list" },
+    },
+    opts = {},
+  },
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      spec = {
+        { "<leader>c", group = "C / build" },
+        { "<leader>d", group = "Debug" },
+        { "<leader>f", group = "Find / LSP" },
+        { "<leader>fc", group = "Calls" },
+        { "<leader>g", group = "Git" },
+        { "<leader>h", group = "Harpoon" },
+        { "<leader>i", group = "REPL Python" },
+        { "<leader>n", group = "Tests" },
+        { "<leader>r", group = "Rename / replace" },
+        { "<leader>s", group = "Session" },
+        { "<leader>v", group = "View / toggles" },
+      },
+    },
   },
   { "rose-pine/neovim", name = "rose-pine", lazy = false, priority = 1000 },
 }, {

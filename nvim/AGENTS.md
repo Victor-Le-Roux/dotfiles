@@ -6,8 +6,12 @@
 `lua/vle-roux/`. Keep responsibilities separated there: editor options belong in
 `options.lua`, user commands and autocmds in `commands.lua`, mappings in
 `remaps.lua`, reusable mapping helpers in `keymap.lua`, plugin specifications in
-`lazy.lua`, C project workflows in `c_tools.lua`, and UI behavior in focused
-modules such as `theme.lua` or `markdown_preview.lua`.
+`lazy.lua`, C project workflows (build, Overseer templates, DAP program, bear) in
+`c_tools.lua`, 42 norm detection, the norminette linter and norm-driven settings in
+`norm42.lua`, Python
+interpreter/venv resolution in `python.lua`, Treesitter parsers and textobjects
+in `treesitter.lua`, Mason-managed tools in `tools.lua`, and UI behavior in
+focused modules such as `theme.lua` or `markdown_preview.lua`.
 
 `plugin/stdheader.vim` provides the 42 header command. `autoload/plug.vim` is
 vendored compatibility code; avoid editing it unless intentionally updating that
