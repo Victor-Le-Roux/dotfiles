@@ -1,5 +1,4 @@
 local options = {
-  autoindent = true,
   -- No smartindent: filetype indent handles C and Python, and smartindent
   -- would push Python "#" comments to column 0.
   expandtab = false,
@@ -12,7 +11,6 @@ local options = {
   number = true,
   relativenumber = true,
   numberwidth = 4,
-  incsearch = true,
   hlsearch = false,
   ignorecase = true,
   smartcase = true,
@@ -21,16 +19,13 @@ local options = {
   splitright = true,
 
   termguicolors = true,
-  hidden = true,
   signcolumn = "yes",
   showmode = false,
---  errorbells = false,
   wrap = true,
   linebreak = true,
   breakindent = true,
   cursorline = true,
   cursorlineopt = "number",
-  fileencoding = "utf-8",
 
   backup = false,
   writebackup = false,
@@ -41,7 +36,6 @@ local options = {
   foldlevelstart = 99,
   foldtext = "",
 
---  colorcolumn = "80",
   updatetime = 250,
   scrolloff = 15,
   mouse = "",
@@ -55,24 +49,24 @@ local options = {
   },
 
   title = true,
-  -- titlestring = "%t - Wvim",
   titlestring = "Neovim - %t",
   guifont = "JetBrainsMono Nerd Font Mono:h16",
-  -- clipboard = "unnamedplus",
 }
 
--- vim.opt.nrformats:append("alpha") -- increment letters
 vim.opt.shortmess:append("IsF")
 
--- vim.o.shortmess = "filnxstToOFS"
+-- Icons need a Nerd Font in the terminal. NVIM_NERD_FONT=0 switches the
+-- plugins to plain text (a terminal without the font, e.g. at 42).
+vim.g.have_nerd_font = vim.env.NVIM_NERD_FONT ~= "0"
 
 for option, value in pairs(options) do
   vim.opt[option] = value
 end
 
-local fish = vim.fn.exepath("fish")
-if fish ~= "" then
-  vim.opt.shell = fish
+-- fish as 'shell' slows system() and :! and trips some plugins: it only
+-- runs in terminals (see terminal.lua).
+if vim.o.shell:match("fish$") then
+  vim.o.shell = "sh"
 end
 
 -- .h files are C or C++ depending on their project: see c_tools.header_filetype.

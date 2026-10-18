@@ -5,17 +5,19 @@
 `init.lua` is the entry point: it sets global defaults and loads modules from
 `lua/vle-roux/`. Keep responsibilities separated there: editor options belong in
 `options.lua`, user commands and autocmds in `commands.lua`, mappings in
-`remaps.lua`, reusable mapping helpers in `keymap.lua`, plugin specifications in
-`lazy.lua`, C project workflows (build, Overseer templates, DAP program, bear) in
+`remaps.lua`, reusable mapping helpers in `keymap.lua`, the lazy.nvim bootstrap in
+`lazy.lua`, plugin specifications in `plugins/` (one file per domain: `lsp.lua`,
+`completion.lua`, `format_lint.lua`, `navigation.lua`, `git.lua`,
+`debug_test.lua`, `ui.lua`, `editing.lua`, `lang.lua`), C project workflows (build, Overseer templates, DAP program, bear) in
 `c_tools.lua`, 42 norm detection, the norminette linter and norm-driven settings in
 `norm42.lua`, Python
 interpreter/venv resolution in `python.lua`, Treesitter parsers and textobjects
 in `treesitter.lua`, Mason-managed tools in `tools.lua`, and UI behavior in
 focused modules such as `theme.lua` or `markdown_preview.lua`.
 
-`plugin/stdheader.vim` provides the 42 header command. `autoload/plug.vim` is
-vendored compatibility code; avoid editing it unless intentionally updating that
-dependency. `lazy-lock.json` pins plugin revisions. The `after/` directory is
+`plugin/stdheader.vim` provides the 42 header command. `lua/vle-roux/terminal.lua`
+opens the shared terminal split, and `lua/vle-roux/health.lua` backs
+`:checkhealth vle-roux`. `lazy-lock.json` pins plugin revisions. The `after/` directory is
 reserved for runtime overrides. Files such as `nvim.log` are diagnostics, not
 source. `training/` contains disposable C/Make exercises; its launcher copies
 fixtures to `/tmp` so practice never edits the canonical examples.

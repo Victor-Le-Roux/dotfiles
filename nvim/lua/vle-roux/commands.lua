@@ -1,61 +1,42 @@
--- Single-file builds. C files without a build system go through c_tools
--- (every .c of the directory); Python runs from :Run.
-local build_commands = {
-  c = "!gcc -std=c17 -Wall -Wextra -O2 -o %:p:r %",
-  cpp = "!g++ -std=c++20 -Wall -Wextra -O2 -o %:p:r %",
-}
-
-local debug_build_commands = {
-  c = "!gcc -std=c17 -Wall -Wextra -g3 -O0 -o %:p:r %",
-  cpp = "!g++ -std=c++20 -Wall -Wextra -g3 -O0 -o %:p:r %",
-}
-
-local run_commands = {
-  c = "%:p:r",
-  cpp = "%:p:r",
-}
-
-local required_commands = {
-  c = "gcc",
-  cpp = "g++",
-}
-
+-- C goes through c_tools (CMake, Make, or every .c of the directory). A
+-- lone C++ file is compiled next to itself; Python runs from :Run.
 local c_tools = require("vle-roux.c_tools")
 c_tools.setup()
 
-local function has_required_command(filetype)
-  local command = required_commands[filetype]
-  if not command or vim.fn.executable(command) == 1 then
-    return true
-  end
-
-  vim.notify("Commande indisponible : " .. command, vim.log.levels.WARN)
-  return false
+local function run_terminal(command)
+  require("vle-roux.terminal").open(command, 20)
 end
 
-local function run_terminal(command)
-  vim.cmd("sp")
-  vim.cmd("terminal " .. command)
-  vim.cmd("resize 20N")
-  vim.cmd("startinsert")
+local function single_cpp_build(opts)
+  opts = opts or {}
+  if vim.fn.executable("g++") ~= 1 then
+    vim.notify("Commande indisponible : g++", vim.log.levels.WARN)
+    return
+  end
+
+  vim.cmd("silent update")
+  local command = { "g++", "-std=c++20", "-Wall", "-Wextra" }
+  vim.list_extend(command, opts.debug and { "-g3", "-O0" } or { "-O2" })
+  vim.list_extend(command, { "-o", vim.fn.expand("%:p:r"), vim.fn.expand("%:p") })
+  c_tools.start_task(opts.debug and "G++ debug build" or "G++ build", command, vim.fn.expand("%:p:h"), opts.on_success)
+end
+
+local function single_cpp_run()
+  local program = vim.fn.expand("%:p:r")
+  if vim.fn.executable(program) ~= 1 then
+    vim.notify("Exécutable absent. Lance :Build avant :Run.", vim.log.levels.WARN)
+    return
+  end
+  run_terminal({ program })
 end
 
 vim.api.nvim_create_user_command("Build", function()
   local filetype = vim.bo.filetype
-
   if (filetype == "c" or filetype == "cpp") and c_tools.build() then
     return
   end
-
-  if not has_required_command(filetype) then
-    return
-  end
-
-  for file, command in pairs(build_commands) do
-    if filetype == file then
-      vim.cmd(command)
-      break
-    end
+  if filetype == "cpp" then
+    single_cpp_build()
   end
 end, {})
 
@@ -73,15 +54,8 @@ vim.api.nvim_create_user_command("DebugBuild", function()
     return
   end
 
-  if not has_required_command(filetype) then
-    return
-  end
-
-  for file, command in pairs(debug_build_commands) do
-    if filetype == file then
-      vim.cmd(command)
-      break
-    end
+  if filetype == "cpp" then
+    single_cpp_build({ debug = true })
   end
 end, {})
 
@@ -94,7 +68,7 @@ vim.api.nvim_create_user_command("Run", function()
       vim.notify("Exécutable absent. Lance :Build avant :Run.", vim.log.levels.WARN)
       return
     end
-    run_terminal(vim.fn.shellescape(fallback_executable))
+    run_terminal({ fallback_executable })
     return
   end
 
@@ -111,50 +85,47 @@ vim.api.nvim_create_user_command("Run", function()
       return
     end
     vim.cmd("silent update")
-    run_terminal(vim.fn.shellescape(python) .. " " .. vim.fn.shellescape(vim.fn.expand("%:p")))
+    run_terminal({ python, vim.fn.expand("%:p") })
     return
   end
 
-  if not has_required_command(filetype) then
-    return
-  end
-
-  for file, command in pairs(run_commands) do
-    if filetype == file then
-      run_terminal(command)
-      break
-    end
+  if filetype == "cpp" then
+    single_cpp_run()
   end
 end, {})
 
+-- Build then run; the build is asynchronous, so :Run waits for success.
 vim.api.nvim_create_user_command("Ha", function()
+  local filetype = vim.bo.filetype
   if c_tools.is_c_family() and c_tools.project_root() then
     c_tools.build()
     vim.notify("Build lancé. Utilise :OverseerRun ou DAP pour exécuter la cible.", vim.log.levels.INFO)
     return
   end
 
-  -- The C fallback build is asynchronous: run only once it has succeeded.
-  if vim.bo.filetype == "c" and c_tools.fallback_executable() then
-    c_tools.build({
-      on_success = function()
-        vim.cmd([[Run]])
-      end,
-    })
-    return
+  local function run()
+    vim.cmd([[Run]])
   end
 
-  vim.cmd([[Build]])
-  vim.cmd([[Run]])
+  if filetype == "c" and c_tools.fallback_executable() then
+    c_tools.build({ on_success = run })
+  elseif filetype == "cpp" then
+    single_cpp_build({ on_success = run })
+  else
+    run()
+  end
 end, {})
 
 vim.api.nvim_create_user_command("Config", function() vim.cmd.cd(vim.fn.stdpath("config")) end, {})
 
+-- Plugins (lazy-lock.json is rewritten), Mason tools, Treesitter parsers.
 vim.api.nvim_create_user_command("UpdateAll", function()
-  if vim.fn.exists(":MasonUpdate") == 2 then
-    vim.cmd([[MasonUpdate]])
+  for _, command in ipairs({ "Lazy sync", "MasonUpdate", "TSUpdate" }) do
+    if vim.fn.exists(":" .. vim.split(command, " ")[1]) == 2 then
+      vim.cmd(command)
+    end
   end
-end, {})
+end, { desc = "Mettre à jour plugins, outils Mason et parseurs Treesitter" })
 
 vim.api.nvim_create_user_command("Norm42", function()
   require("vle-roux.norm42").toggle()
@@ -188,8 +159,11 @@ vim.api.nvim_create_autocmd({ "BufWinEnter", "FileType", "BufWritePost" }, {
   desc = "colorcolumn à 81 pour les fichiers à la norme 42",
 })
 
+local group = vim.api.nvim_create_augroup("vle_commands", { clear = true })
+
 -- Web files conventionally use two spaces; .editorconfig still wins.
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = {
     "html",
     "css",
@@ -212,6 +186,7 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
+  group = group,
   pattern = { "markdown", "gitcommit", "text" },
   callback = function()
     vim.opt_local.spell = true
@@ -239,6 +214,7 @@ vim.api.nvim_create_user_command("MarkdownPreviewRefresh", function()
 end, {})
 
 vim.api.nvim_create_autocmd("BufWritePost", {
+  group = group,
   pattern = { "*.md", "*.markdown" },
   callback = function(args)
     require("vle-roux.markdown_preview").refresh_if_visible(args.buf)
@@ -246,6 +222,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 })
 
 vim.api.nvim_create_autocmd({ "CursorMoved", "BufEnter" }, {
+  group = group,
   pattern = { "*.md", "*.markdown" },
   callback = function(args)
     require("vle-roux.markdown_preview").sync_if_visible(args.buf)
@@ -253,6 +230,7 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "BufEnter" }, {
 })
 
 vim.api.nvim_create_autocmd("VimResized", {
+  group = group,
   callback = function()
     require("vle-roux.markdown_preview").refresh_visible()
   end,

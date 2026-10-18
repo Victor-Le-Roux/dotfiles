@@ -28,7 +28,9 @@ M.parsers = {
 
 -- Building parsers needs the tree-sitter CLI, which Mason installs
 -- (see tools.lua). Without it, Neovim keeps its bundled parsers.
-function M.install()
+-- `opts.wait` (milliseconds) blocks until the parsers are built.
+function M.install(opts)
+  opts = opts or {}
   if vim.fn.executable("tree-sitter") ~= 1 then
     return false
   end
@@ -43,7 +45,10 @@ function M.install()
     return not vim.tbl_contains(installed, parser)
   end, M.parsers)
   if #missing > 0 then
-    treesitter.install(missing)
+    local task = treesitter.install(missing)
+    if opts.wait then
+      task:wait(opts.wait)
+    end
   end
   return true
 end

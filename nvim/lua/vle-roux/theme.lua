@@ -231,12 +231,29 @@ local function apply_syntax_colors(syntax)
   end
 end
 
-function M.setup()
-  local kitty = read_kitty_palette()
-  local light_theme = true
-  if kitty.background then
-    light_theme = hex_luminance(kitty.background) > 140
+-- Colours shared with the lualine theme (lua/lualine/themes/estampe.lua).
+-- Read once: the kitty theme only changes between Neovim sessions.
+local cached_palette
+
+function M.palette()
+  if not cached_palette then
+    local kitty = read_kitty_palette()
+    local light = true
+    if kitty.background then
+      light = hex_luminance(kitty.background) > 140
+    end
+    cached_palette = {
+      light = light,
+      ui = pick_ui_palette(kitty, light),
+      syntax = pick_syntax_palette(kitty, light),
+    }
   end
+  return cached_palette
+end
+
+function M.setup()
+  local palette = M.palette()
+  local light_theme = palette.light
 
   local ok, rose_pine = pcall(require, "rose-pine")
   local colorscheme = ok and "rose-pine" or "habamax"
@@ -247,8 +264,8 @@ function M.setup()
     group = vim.api.nvim_create_augroup("vle_theme_overrides", { clear = true }),
     pattern = colorscheme .. "*",
     callback = function()
-      apply_ui_colors(pick_ui_palette(kitty, light_theme))
-      apply_syntax_colors(pick_syntax_palette(kitty, light_theme))
+      apply_ui_colors(palette.ui)
+      apply_syntax_colors(palette.syntax)
     end,
   })
 

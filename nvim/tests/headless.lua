@@ -21,6 +21,7 @@ assert(blink_config.snippets.preset == "luasnip", "blink.cmp must expand LuaSnip
 assert(vim.lsp.config.basedpyright ~= nil, "basedpyright is not configured")
 assert(vim.diagnostic.config().severity_sort == true, "diagnostics are not configured")
 assert(vim.fn.exists(":CBear") == 2, ":CBear is missing")
+assert(type(require("vle-roux.health").check) == "function", ":checkhealth vle-roux is missing")
 assert(vim.fn.exists(":Norm42") == 2, ":Norm42 is missing")
 assert(vim.filetype.match({ filename = "a.h" }) == "c", ".h headers must be C")
 
@@ -103,6 +104,11 @@ assert(norm42.enabled(norm_buf), ".norm42 must win over .clang-format")
 
 require("lazy").load({ plugins = { "conform.nvim", "nvim-lint" } })
 assert(require("lint").linters.norminette ~= nil, "norminette linter is missing")
+if vim.fn.executable("norminette") == 1 then
+  assert(vim.wait(10000, function()
+    return #vim.diagnostic.get(norm_buf) > 0
+  end, 100), "norminette diagnostics are missing")
+end
 if vim.fn.executable("c_formatter_42") == 1 then
   local formatters = require("conform").list_formatters_to_run(norm_buf)
   assert(formatters[1] and formatters[1].name == "c_formatter_42", "norm files must use c_formatter_42")
@@ -135,5 +141,30 @@ assert(python_tools.repl_command(0)[1] ~= nil, "Python REPL command is missing")
 
 local startup_picker = vim.api.nvim_get_autocmds({ group = "vle_startup_file_picker", event = "VimEnter" })
 assert(#startup_picker == 1, "startup fuzzy file picker is not configured")
+
+-- LSP keymaps reach clangd buffers (lspconfig's own on_attach must not hide them).
+if vim.fn.executable(c_tools.clangd_command()) == 1 then
+  local lsp_dir = vim.fn.tempname()
+  vim.fn.mkdir(lsp_dir, "p")
+  vim.fn.writefile({}, lsp_dir .. "/Makefile")
+  vim.fn.writefile({ "int main(void) { return (0); }" }, lsp_dir .. "/main.c")
+  vim.cmd.edit(lsp_dir .. "/main.c")
+  local lsp_buf = vim.api.nvim_get_current_buf()
+  local attached = vim.wait(10000, function()
+    return #vim.lsp.get_clients({ bufnr = lsp_buf, name = "clangd" }) > 0
+  end, 50)
+  assert(attached, "clangd did not attach to a C buffer")
+  vim.wait(200)
+  local function buffer_map(lhs)
+    return vim.fn.maparg(lhs, "n", false, true).buffer == 1
+  end
+  assert(buffer_map(" rn"), "<leader>rn is missing in clangd buffers")
+  assert(buffer_map(" fh"), "<leader>fh is missing in clangd buffers")
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = lsp_buf })) do
+    client:stop()
+  end
+  vim.cmd("bwipeout!")
+  vim.fn.delete(lsp_dir, "rf")
+end
 
 print("HEADLESS_C_CONFIG_OK")

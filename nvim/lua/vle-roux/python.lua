@@ -100,13 +100,23 @@ function M.interpreter(bufnr)
   return system_python ~= "" and system_python or nil
 end
 
+-- Checking for IPython starts Python (slow): once per interpreter.
+local ipython_cache = {}
+
+local function has_ipython(python)
+  if ipython_cache[python] == nil then
+    local ok, result = pcall(function()
+      return vim.system({ python, "-c", "import IPython" }):wait(3000)
+    end)
+    ipython_cache[python] = ok and result.code == 0
+  end
+  return ipython_cache[python]
+end
+
 -- IPython from the same environment when it is installed there.
 function M.repl_command(bufnr)
   local python = M.interpreter(bufnr) or "python3"
-  local ok, result = pcall(function()
-    return vim.system({ python, "-c", "import IPython" }):wait(3000)
-  end)
-  if ok and result.code == 0 then
+  if has_ipython(python) then
     return { python, "-m", "IPython", "--no-autoindent" }
   end
   return { python }

@@ -87,6 +87,9 @@ local function start_task(name, command, cwd, on_success)
   return task
 end
 
+-- Shared with commands.lua (single-file C++ builds).
+M.start_task = start_task
+
 local function restart_clangd()
   if vim.fn.exists(":LspRestart") == 2 then
     pcall(vim.cmd, "LspRestart clangd")
@@ -243,7 +246,8 @@ function M.clangd_fallback_flags(root)
   end
 
   local flags = {}
-  for _, name in ipairs({ "include", "inc" }) do
+  -- includes/ and libft/ follow the usual 42 project layout.
+  for _, name in ipairs({ "include", "inc", "includes", "libft", "libft/include", "libft/includes" }) do
     local directory = root .. "/" .. name
     if is_directory(directory) then
       table.insert(flags, "-I" .. directory)
@@ -523,19 +527,26 @@ function M.dap_args()
 end
 
 -- Generates compile_commands.json for Makefile projects so clangd knows the
--- real flags and include paths.
+-- real flags and include paths. compiledb (pip) replaces bear where it
+-- cannot be installed, e.g. without root on 42 workstations.
 function M.bear()
   local root = M.project_root()
   if not root or not makefile(root) then
     vim.notify("Aucun Makefile trouvé pour le buffer courant", vim.log.levels.WARN)
     return
   end
-  if vim.fn.executable("bear") ~= 1 then
-    vim.notify("Commande indisponible : bear", vim.log.levels.ERROR)
+
+  local name, command
+  if vim.fn.executable("bear") == 1 then
+    name, command = "Bear", { "bear", "--", "make", "-B" }
+  elseif vim.fn.executable("compiledb") == 1 then
+    name, command = "compiledb", { "compiledb", "make", "-B" }
+  else
+    vim.notify("Commande indisponible : bear ou compiledb", vim.log.levels.ERROR)
     return
   end
 
-  start_task("Bear", { "bear", "--", "make", "-B" }, root, function()
+  start_task(name, command, root, function()
     restart_clangd()
     vim.notify("compile_commands.json généré, clangd relancé")
   end)
