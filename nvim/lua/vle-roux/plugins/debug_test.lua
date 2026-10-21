@@ -159,7 +159,18 @@ return {
       })
 
       -- gdb >= 14 speaks DAP natively: often more reliable than lldb for C.
-      if vim.fn.executable("gdb") == 1 then
+      -- Ubuntu 22.04 ships gdb 12, which does not.
+      local function gdb_speaks_dap()
+        if vim.fn.executable("gdb") ~= 1 then
+          return false
+        end
+        local ok, result = pcall(function()
+          return vim.system({ "gdb", "--version" }, { text = true }):wait(3000)
+        end)
+        local major = ok and tonumber((result.stdout or ""):match("(%d+)%.%d+")) or 0
+        return major >= 14
+      end
+      if gdb_speaks_dap() then
         dap.adapters.gdb = {
           type = "executable",
           command = "gdb",
@@ -174,7 +185,9 @@ return {
       end
 
       -- The program and its arguments are asked once, then remembered.
-      local c_configurations = {
+      -- codelldb is optional in the light profile (NVIM_PROFILE=light).
+      local c_configurations = {}
+      vim.list_extend(c_configurations, dap.adapters.codelldb == nil and {} or {
         {
           type = "codelldb",
           request = "launch",
@@ -193,7 +206,7 @@ return {
           pid = require("dap.utils").pick_process,
           cwd = project_cwd,
         },
-      }
+      })
       if dap.adapters.gdb then
         table.insert(c_configurations, {
           type = "gdb",

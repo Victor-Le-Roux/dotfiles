@@ -76,7 +76,8 @@ return {
       snippets = { preset = "luasnip" },
       sources = {
         default = { "lsp", "path", "snippets", "buffer" },
-        per_filetype = {
+        -- vim-dadbod-completion is absent from the light profile (lang.lua).
+        per_filetype = vim.g.vle_light and { lua = { inherit_defaults = true, "lazydev" } } or {
           lua = { inherit_defaults = true, "lazydev" },
           sql = { "dadbod", "snippets", "buffer" },
           mysql = { "dadbod", "snippets", "buffer" },

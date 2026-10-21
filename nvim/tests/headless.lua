@@ -39,10 +39,13 @@ local overseer = require("overseer")
 assert(type(overseer.new_task) == "function", "Overseer did not load")
 
 local dap = require("dap")
-assert(dap.adapters.codelldb ~= nil, "codelldb adapter is missing")
 assert(package.loaded.dapui ~= nil, "nvim-dap-ui did not load")
 
-for _, filetype in ipairs({ "c", "cpp" }) do
+-- codelldb is optional in the light profile (NVIM_PROFILE=light).
+local has_codelldb = vim.fn.executable("codelldb") == 1
+assert(has_codelldb or vim.g.vle_light, "codelldb adapter is missing")
+assert((dap.adapters.codelldb ~= nil) == has_codelldb, "the codelldb adapter must follow its installation")
+for _, filetype in ipairs(has_codelldb and { "c", "cpp" } or {}) do
   local has_attach = vim.iter(dap.configurations[filetype] or {}):any(function(config)
     return config.type == "codelldb" and config.request == "attach"
   end)

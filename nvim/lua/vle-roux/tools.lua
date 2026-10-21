@@ -5,7 +5,7 @@
 -- ensurepip (missing on Ubuntu without python3-venv, e.g. 42 workstations).
 local M = {}
 
-M.packages = {
+M.full_packages = {
   -- C / C++ (clang-format comes from the system when available)
   "clangd",
   "codelldb",
@@ -26,6 +26,13 @@ M.packages = {
   -- Treesitter parser builds
   "tree-sitter-cli",
 }
+
+-- Light profile: clangd only. Python tools come from pip (installer), the
+-- tree-sitter CLI is only needed while building parsers, and codelldb is
+-- kept when it was installed on purpose.
+M.light_packages = { "clangd" }
+
+M.packages = vim.g.vle_light and M.light_packages or M.full_packages
 
 -- Command that proves a package is already provided by something else.
 local provided_by = {
@@ -164,10 +171,69 @@ function M.install_blocking(timeout_ms)
     print("Mason : délai dépassé pour " .. pending .. " paquet(s)")
   end
 
-  if not require("vle-roux.treesitter").install({ wait = timeout_ms }) then
+  failures = failures + M.build_parsers(registry, timeout_ms)
+  return failures
+end
+
+-- Uninstalls the Mason packages outside the current profile, except the
+-- names in `keep` (e.g. codelldb). Returns the removed names.
+function M.prune(keep)
+  local registry = require("mason-registry")
+  local wanted = {}
+  for _, name in ipairs(vim.list_extend(vim.list_extend({}, M.packages), keep or {})) do
+    wanted[name] = true
+  end
+
+  local removed, pending = {}, 0
+  for _, package in ipairs(registry.get_installed_packages()) do
+    if not wanted[package.name] then
+      pending = pending + 1
+      table.insert(removed, package.name)
+      package:uninstall({}, function()
+        pending = pending - 1
+      end)
+    end
+  end
+  vim.wait(120000, function()
+    return pending == 0
+  end, 200)
+  return removed
+end
+
+-- Builds the Treesitter parsers. In the light profile the tree-sitter CLI
+-- is installed for the build only, then removed to save space.
+function M.build_parsers(registry, timeout_ms)
+  local cli = registry.get_package("tree-sitter-cli")
+  local temporary = vim.g.vle_light and vim.fn.executable("tree-sitter") ~= 1
+  if temporary then
+    local done, ok = false, false
+    cli:install({}, function(success)
+      ok, done = success, true
+    end)
+    vim.wait(timeout_ms, function()
+      return done
+    end, 500)
+    if not ok then
+      print("Treesitter : CLI tree-sitter impossible à installer, parseurs intégrés à Neovim seulement")
+      return 1
+    end
+  end
+
+  local built = require("vle-roux.treesitter").install({ wait = timeout_ms })
+  if not built then
     print("Treesitter : CLI tree-sitter absente, parseurs intégrés à Neovim seulement")
   end
-  return failures
+
+  if temporary then
+    local removed = false
+    cli:uninstall({}, function()
+      removed = true
+    end)
+    vim.wait(60000, function()
+      return removed
+    end, 200)
+  end
+  return built and 0 or 1
 end
 
 return M

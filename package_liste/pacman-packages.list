@@ -6,6 +6,7 @@ android-sdk-cmdline-tools-latest
 android-tools
 arandr
 arch-audit
+arch-install-scripts
 archlinux-wallpaper
 awww
 base
@@ -73,6 +74,7 @@ gnome-keyring
 gnome-system-monitor
 gnome-themes-extra
 go
+gptfdisk
 graphviz
 greetd
 greetd-tuigreet

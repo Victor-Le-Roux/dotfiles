@@ -59,6 +59,10 @@ vim.opt.shortmess:append("IsF")
 -- plugins to plain text (a terminal without the font, e.g. at 42).
 vim.g.have_nerd_font = vim.env.NVIM_NERD_FONT ~= "0"
 
+-- NVIM_PROFILE=light keeps only the C and Python tools (machines with a
+-- small home quota, e.g. 42 sessions): see tools.lua and treesitter.lua.
+vim.g.vle_light = vim.env.NVIM_PROFILE == "light"
+
 for option, value in pairs(options) do
   vim.opt[option] = value
 end

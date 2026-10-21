@@ -26,6 +26,24 @@ M.parsers = {
   "yaml",
 }
 
+-- Light profile (NVIM_PROFILE=light): C, C++, Python and the languages of
+-- Neovim's own files.
+if vim.g.vle_light then
+  M.parsers = {
+    "bash",
+    "c",
+    "cpp",
+    "lua",
+    "make",
+    "markdown",
+    "markdown_inline",
+    "python",
+    "query",
+    "vim",
+    "vimdoc",
+  }
+end
+
 -- Building parsers needs the tree-sitter CLI, which Mason installs
 -- (see tools.lua). Without it, Neovim keeps its bundled parsers.
 -- `opts.wait` (milliseconds) blocks until the parsers are built.

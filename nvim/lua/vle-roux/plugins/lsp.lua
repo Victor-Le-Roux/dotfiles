@@ -160,7 +160,8 @@ return {
       end
       -- Servers may also come from the system (clangd) or from pip
       -- (basedpyright where Mason cannot build Python environments).
-      for _, server_name in ipairs({ "clangd", "basedpyright", "ruff", "lua_ls" }) do
+      -- jedi_language_server is the light profile's Python server.
+      for _, server_name in ipairs({ "clangd", "basedpyright", "jedi_language_server", "ruff", "lua_ls" }) do
         local cmd = vim.lsp.config[server_name] and vim.lsp.config[server_name].cmd
         if type(cmd) == "table" and vim.fn.executable(cmd[1]) == 1 then
           enabled_servers[server_name] = true
