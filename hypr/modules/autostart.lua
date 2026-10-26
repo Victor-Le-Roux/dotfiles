@@ -42,6 +42,7 @@ local function start_session()
     )
     start_once("waybar", "waybar")
     start_once("mako", "mako")
+    start_once("kdeconnectd", "kdeconnectd")
     start_once("awww-daemon", "awww-daemon")
     hl.exec_cmd(
         "if command -v awww >/dev/null 2>&1; then "
