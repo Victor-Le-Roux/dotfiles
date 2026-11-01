@@ -50,6 +50,13 @@ hl.config({
     },
 })
 
+-- Don't switch the monitor to HDR automatically for fullscreen apps.
+hl.config({
+    render = {
+        cm_auto_hdr = 0,
+    },
+})
+
 -- Smooth fractional scaling for legacy XWayland apps such as Slippi Launcher.
 hl.config({
     xwayland = {

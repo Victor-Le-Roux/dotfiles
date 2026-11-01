@@ -21,6 +21,9 @@ return {
             mode = "3840x2160@160",
             position = "0x0",
             scale = 1.5,
+            -- Wide-gamut panel: map sRGB to the real gamut from EDID to avoid oversaturation.
+            cm = "edid",
+            bitdepth = 10,
         },
         secondary = {
             output = "HDMI-A-1",
