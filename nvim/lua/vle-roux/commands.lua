@@ -141,6 +141,10 @@ end, {
   desc = "Forcer (on), désactiver (off) ou oublier (clear) la norme 42 pour le projet",
 })
 
+vim.api.nvim_create_user_command("PyVenv", function()
+  require("vle-roux.python").create_venv(0)
+end, { desc = "Créer .venv à la racine du projet Python (et y installer requirements.txt)" })
+
 vim.api.nvim_create_user_command("FormatOnSave", function()
   vim.g.format_on_save = not vim.g.format_on_save
   vim.notify("Formatage à la sauvegarde " .. (vim.g.format_on_save and "activé" or "désactivé"))

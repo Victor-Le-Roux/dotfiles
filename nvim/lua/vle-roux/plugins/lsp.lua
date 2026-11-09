@@ -129,7 +129,40 @@ return {
         end,
       })
 
+      local python = require("vle-roux.python")
+
+      -- jedi runs from the installer's private environment and would only
+      -- see its packages: point it at the project's interpreter.
+      vim.lsp.config("jedi_language_server", {
+        root_markers = python.root_markers,
+        before_init = function(init_params, config)
+          local interpreter = python.root_interpreter(config.root_dir)
+          if interpreter then
+            init_params.initializationOptions = vim.tbl_deep_extend(
+              "force",
+              init_params.initializationOptions or {},
+              { workspace = { environmentPath = interpreter } }
+            )
+          end
+        end,
+      })
+
+      -- Where flake8 lints (42 projects), ruff only formats and organizes
+      -- imports: its diagnostics would repeat flake8's.
+      vim.lsp.config("ruff", {
+        before_init = function(init_params, config)
+          if python.linter(config.root_dir, config.root_dir) == "flake8" then
+            init_params.initializationOptions = vim.tbl_deep_extend(
+              "force",
+              init_params.initializationOptions or {},
+              { settings = { lint = { enable = false } } }
+            )
+          end
+        end,
+      })
+
       vim.lsp.config("basedpyright", {
+        root_markers = python.root_markers,
         settings = {
           basedpyright = {
             -- ruff organizes imports; "standard" avoids basedpyright's very
@@ -141,10 +174,10 @@ return {
         -- Mutate the settings table in place: the client keeps a reference
         -- to it and answers the server's configuration requests from it.
         before_init = function(_, config)
-          local python = require("vle-roux.python").venv_python(config.root_dir)
-          if python then
+          local interpreter = python.venv_python(config.root_dir)
+          if interpreter then
             config.settings.python = config.settings.python or {}
-            config.settings.python.pythonPath = python
+            config.settings.python.pythonPath = interpreter
           end
         end,
       })

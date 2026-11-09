@@ -76,11 +76,42 @@ end
 
 local function check_python()
   health.start("vle-roux : Python")
-  local python = require("vle-roux.python").interpreter()
+  local python_tools = require("vle-roux.python")
+  local python = python_tools.interpreter()
   if python then
     health.ok("Interpréteur : " .. python)
   else
     health.warn("python3 introuvable : :Run, REPL et debugpy indisponibles")
+    return
+  end
+
+  local server = vim.fn.exepath("basedpyright-langserver")
+  if server == "" then
+    server = vim.fn.exepath("jedi-language-server")
+  end
+  if server ~= "" then
+    health.ok("Serveur Python : " .. server)
+  else
+    health.warn("Ni jedi-language-server ni basedpyright : pas de complétion Python")
+  end
+  local root = python_tools.project_root(0)
+  local flake8 = python_tools.tool(root, "flake8")
+  if flake8 then
+    health.ok("flake8 (norme des projets Python de 42) : " .. flake8)
+  else
+    health.warn("flake8 introuvable : ruff signale les erreurs, moins que flake8", "pip install flake8")
+  end
+  local mypy = python_tools.tool(root, "mypy", true)
+  if mypy then
+    health.ok("mypy du projet : " .. mypy)
+  else
+    health.info("mypy absent de l'environnement du projet : pas de vérification de types (.venv/bin/pip install mypy)")
+  end
+  local ok, result = pcall(function()
+    return vim.system({ "python3", "-c", "import ensurepip, venv" }):wait(5000)
+  end)
+  if not (ok and result.code == 0) then
+    health.info("python3 -m venv indisponible (ensurepip absent) : :PyVenv crée .venv avec virtualenv")
   end
 end
 

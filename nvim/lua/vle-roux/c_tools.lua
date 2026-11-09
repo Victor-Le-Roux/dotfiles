@@ -245,7 +245,8 @@ function M.clangd_fallback_flags(root)
     return {}
   end
 
-  local flags = {}
+  -- The root itself: headers there must resolve from subfolders too (bonus/).
+  local flags = { "-I" .. root }
   -- includes/ and libft/ follow the usual 42 project layout.
   for _, name in ipairs({ "include", "inc", "includes", "libft", "libft/include", "libft/includes" }) do
     local directory = root .. "/" .. name

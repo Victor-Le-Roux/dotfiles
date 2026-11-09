@@ -170,4 +170,56 @@ if vim.fn.executable(c_tools.clangd_command()) == 1 then
   vim.fn.delete(lsp_dir, "rf")
 end
 
+-- Python: the project's environment, flake8 (42 projects) or ruff, mypy.
+do
+  lazy.load({ plugins = { "nvim-lint" } })
+  local python = require("vle-roux.python")
+  local project = vim.fn.tempname()
+  local bin = project .. "/.venv/bin"
+  vim.fn.mkdir(bin, "p")
+  vim.uv.fs_symlink(vim.fn.exepath("python3"), bin .. "/python")
+  vim.fn.writefile({ "#!/bin/sh", "echo 'app.py:1:1:E501:line too long (90 > 79 characters)'" }, bin .. "/flake8")
+  vim.fn.writefile({ "#!/bin/sh", "echo \"$7:1:1:1:2: error: Bad type  [misc]\"" }, bin .. "/mypy")
+  vim.fn.setfperm(bin .. "/flake8", "rwxr-xr-x")
+  vim.fn.setfperm(bin .. "/mypy", "rwxr-xr-x")
+  local file = project .. "/app.py"
+  vim.fn.writefile({ "x = 1" }, file)
+
+  assert(vim.fn.exists(":PyVenv") == 2, ":PyVenv is missing")
+  assert(vim.list_contains(vim.lsp.config.jedi_language_server.root_markers, ".venv"), "jedi must find .venv roots")
+  assert(python.tool(project, "flake8") == bin .. "/flake8", "flake8 must come from the project's environment")
+  assert(python.tool(project, "mypy", true) == bin .. "/mypy", "mypy must come from the project's environment")
+  assert(python.linter(file, project) == "flake8", "flake8 must lint projects without ruff configuration")
+  assert(python.flake8_line_length(project) == 79, "flake8's default line length is 79")
+  vim.fn.writefile({ "[flake8]", "max-line-length = 100" }, project .. "/.flake8")
+  assert(python.flake8_line_length(project) == 100, ".flake8 must set the line length")
+
+  local params = {}
+  vim.lsp.config.jedi_language_server.before_init(params, { root_dir = project })
+  assert(params.initializationOptions.workspace.environmentPath == bin .. "/python", "jedi must use the project's interpreter")
+  params = {}
+  vim.lsp.config.ruff.before_init(params, { root_dir = project })
+  assert(params.initializationOptions.settings.lint.enable == false, "ruff must not repeat flake8's diagnostics")
+
+  vim.cmd.edit(file)
+  local bufnr = vim.api.nvim_get_current_buf()
+  assert(vim.bo.expandtab and vim.bo.shiftwidth == 4, "Python must be indented with 4 spaces")
+  assert(python.format_line_length(bufnr) == 100, "ruff format must follow flake8's line length")
+  python.lint(bufnr)
+  local lint = require("lint")
+  for _, name in ipairs({ "flake8", "mypy" }) do
+    assert(vim.wait(5000, function()
+      return #vim.diagnostic.get(bufnr, { namespace = lint.get_namespace(name) }) > 0
+    end, 50), name .. " diagnostics are missing")
+  end
+
+  vim.fn.writefile({ "line-length = 88" }, project .. "/ruff.toml")
+  assert(python.linter(file, project) == "ruff", "projects configured for ruff keep ruff")
+  assert(python.format_line_length(bufnr) == nil, "ruff's own line length must stay")
+  python.lint(bufnr)
+  assert(#vim.diagnostic.get(bufnr, { namespace = lint.get_namespace("flake8") }) == 0, "flake8 must stop in ruff projects")
+  vim.cmd("bwipeout!")
+  vim.fn.delete(project, "rf")
+end
+
 print("HEADLESS_C_CONFIG_OK")
