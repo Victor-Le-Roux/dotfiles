@@ -73,4 +73,13 @@ if vim.o.shell:match("fish$") then
   vim.o.shell = "sh"
 end
 
+-- Python continuation lines one level in, as ruff format and PEP 8 do
+-- (Vim's default is two after an open bracket), and a closing bracket
+-- back at the opening line's indent.
+vim.g.python_indent = {
+  open_paren = "shiftwidth()",
+  continue = "shiftwidth()",
+  closed_paren_align_last_line = false,
+}
+
 -- .h files are C or C++ depending on their project: see c_tools.header_filetype.

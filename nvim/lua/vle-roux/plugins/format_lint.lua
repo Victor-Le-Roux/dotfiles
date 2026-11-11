@@ -28,7 +28,8 @@ return {
             return { "clang-format" }
           end,
           cpp = { "clang-format" },
-          python = { "ruff_format" },
+          -- Sorts the imports (never removes them), then formats.
+          python = { "ruff_organize_imports", "ruff_format" },
           lua = { "stylua" },
           javascript = prettier,
           javascriptreact = prettier,
@@ -44,10 +45,21 @@ return {
         },
         formatters = {
           c_formatter_42 = { command = "c_formatter_42", stdin = true },
-          -- flake8's line length where flake8 lints (42 projects).
+          -- flake8's line length outside projects configured for ruff
+          -- (python.line_length), for the code and the wrapped imports.
           ruff_format = {
             args = function(_, ctx)
               local args = { "format", "--force-exclude" }
+              local length = require("vle-roux.python").format_line_length(ctx.buf)
+              if length then
+                vim.list_extend(args, { "--line-length", tostring(length) })
+              end
+              return vim.list_extend(args, { "--stdin-filename", "$FILENAME", "-" })
+            end,
+          },
+          ruff_organize_imports = {
+            args = function(_, ctx)
+              local args = { "check", "--fix", "--force-exclude", "--select=I001", "--exit-zero", "--no-cache" }
               local length = require("vle-roux.python").format_line_length(ctx.buf)
               if length then
                 vim.list_extend(args, { "--line-length", tostring(length) })

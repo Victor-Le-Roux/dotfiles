@@ -175,13 +175,56 @@ function M.flake8_line_length(root)
   return 79
 end
 
--- Line length for ruff format when flake8 checks the buffer: ruff's 88
--- would produce lines flake8 rejects. nil keeps ruff's own settings.
-function M.format_line_length(bufnr)
-  local path = vim.api.nvim_buf_get_name(bufnr)
-  local root = M.project_root(bufnr)
-  if M.linter(path, root) == "flake8" then
+-- Line length for ruff outside projects configured for ruff: flake8's (the
+-- 42 checker, by itself or imitated by ruff), as ruff's 88 would produce
+-- lines flake8 rejects. nil keeps the project's ruff settings.
+function M.line_length(path, root)
+  if not M.uses_ruff(path ~= "" and path or root) then
     return M.flake8_line_length(root)
+  end
+end
+
+function M.format_line_length(bufnr)
+  return M.line_length(vim.api.nvim_buf_get_name(bufnr), M.project_root(bufnr))
+end
+
+-- ruff's settings at the root: no lint where flake8 lints (its
+-- diagnostics would repeat flake8's); without flake8 or a ruff
+-- configuration, flake8's default checks (pyflakes and pycodestyle, whose
+-- blank-line and whitespace rules are ruff preview rules) minus the ones
+-- flake8 ignores by default; nil keeps the project's settings.
+function M.ruff_settings(root)
+  if M.linter(root, root) == "flake8" then
+    return { lint = { enable = false } }
+  end
+  if not M.uses_ruff(root) then
+    return {
+      lineLength = M.flake8_line_length(root),
+      lint = { preview = true, select = { "E", "W", "F" }, ignore = { "E226", "E241", "E242" } },
+    }
+  end
+end
+
+-- A colorcolumn just past flake8's line length in Python windows. Like
+-- norm42.lua, only clears a colorcolumn it set.
+function M.refresh_window(win)
+  win = win or vim.api.nvim_get_current_win()
+  if not vim.api.nvim_win_is_valid(win) then
+    return
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(win)
+  local length = vim.bo[bufnr].filetype == "python" and M.format_line_length(bufnr)
+  local set = vim.w[win].python_colorcolumn
+  if length then
+    local column = tostring(length + 1)
+    vim.api.nvim_set_option_value("colorcolumn", column, { scope = "local", win = win })
+    vim.w[win].python_colorcolumn = column
+  elseif set then
+    if vim.wo[win].colorcolumn == set and not vim.w[win].norm42_colorcolumn then
+      vim.api.nvim_set_option_value("colorcolumn", "", { scope = "local", win = win })
+    end
+    vim.w[win].python_colorcolumn = nil
   end
 end
 

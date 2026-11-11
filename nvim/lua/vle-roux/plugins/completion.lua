@@ -30,8 +30,13 @@ return {
             -- falls back to backspace instead of jumping back.
             region_check_events = "CursorMoved",
             delete_check_events = "TextChanged",
+            -- Copied fields (self.x = x of Python's init) follow the typing.
+            update_events = "TextChanged,TextChangedI",
           })
-          require("luasnip.loaders.from_snipmate").lazy_load()
+          -- Python's come from luasnippets/python.lua: vim-snippets' are
+          -- untyped and fill in placeholder docstrings.
+          require("luasnip.loaders.from_snipmate").lazy_load({ exclude = { "python" } })
+          require("luasnip.loaders.from_lua").lazy_load()
 
           vim.keymap.set({ "i", "s" }, "<C-l>", function()
             if luasnip.jumpable(1) then

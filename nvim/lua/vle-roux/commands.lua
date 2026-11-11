@@ -163,6 +163,15 @@ vim.api.nvim_create_autocmd({ "BufWinEnter", "FileType", "BufWritePost" }, {
   desc = "colorcolumn à 81 pour les fichiers à la norme 42",
 })
 
+-- After the norm's autocmd: python.lua leaves the norm's colorcolumn alone.
+vim.api.nvim_create_autocmd({ "BufWinEnter", "FileType", "BufWritePost" }, {
+  group = vim.api.nvim_create_augroup("vle_python_colorcolumn", { clear = true }),
+  callback = function()
+    require("vle-roux.python").refresh_window()
+  end,
+  desc = "colorcolumn après la longueur de ligne de flake8 pour Python",
+})
+
 local group = vim.api.nvim_create_augroup("vle_commands", { clear = true })
 
 -- Web files conventionally use two spaces; .editorconfig still wins.

@@ -18,6 +18,91 @@ assert(vim.lsp.is_enabled("clangd"), "clangd is not enabled")
 local blink_config = require("blink.cmp.config")
 assert(blink_config.keymap.preset == "default", "blink.cmp keymap preset changed")
 assert(blink_config.snippets.preset == "luasnip", "blink.cmp must expand LuaSnip snippets")
+
+-- luasnippets/python.lua replaces vim-snippets' Python snippets, and `def`
+-- takes `self` only inside a class.
+do
+  local luasnip = require("luasnip")
+  local python_buffer = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_set_current_buf(python_buffer)
+  vim.bo[python_buffer].filetype = "python"
+  local snippets = {}
+  for _, snippet in ipairs(luasnip.get_snippets("python")) do
+    assert(snippets[snippet.trigger] == nil, "duplicate Python snippet " .. snippet.trigger)
+    snippets[snippet.trigger] = snippet
+  end
+  assert(snippets.def and snippets.init and not snippets.deff, "Python snippets must come from luasnippets/python.lua")
+
+  local function expand(lines, trigger)
+    vim.api.nvim_buf_set_lines(python_buffer, 0, -1, false, lines)
+    luasnip.snip_expand(snippets[trigger], { pos = { #lines - 1, #lines[#lines] } })
+    luasnip.unlink_current()
+    return vim.api.nvim_buf_get_lines(python_buffer, 0, -1, false)
+  end
+  assert(expand({ "" }, "def")[1] == "def name() -> None:", "def must not take self outside a class")
+  assert(expand({ "class A:", "    " }, "def")[2] == "    def name(self) -> None:", "def must take self in a class")
+  assert(
+    expand({ "class A:", "    @classmethod", "    " }, "def")[3] == "    def name(cls) -> None:",
+    "def must take cls in a classmethod"
+  )
+  assert(expand({ "class A:", "    " }, "init")[3] == "        self.value = value", "init must assign its parameters")
+  -- Loaded with the first buffer of their filetype.
+  vim.bo[python_buffer].filetype = "c"
+  assert(#luasnip.get_snippets("c") > 0, "vim-snippets must still provide the other languages")
+  vim.api.nvim_buf_delete(python_buffer, { force = true })
+end
+
+-- Python outside projects configured for ruff follows flake8: ruff checks
+-- its rules when flake8 is missing, formats at 79 columns and sorts the
+-- imports; the colorcolumn marks the limit; brackets indent one level.
+do
+  local python = require("vle-roux.python")
+  local project = vim.fn.tempname()
+  vim.fn.mkdir(project, "p")
+  vim.fn.writefile({}, project .. "/requirements.txt")
+  vim.fn.writefile({ "import sys", "import os", "", "print(os, sys)" }, project .. "/app.py")
+
+  local settings = python.ruff_settings(project)
+  if python.tool(project, "flake8") then
+    assert(settings.lint.enable == false, "ruff must not repeat flake8's diagnostics")
+  else
+    assert(settings.lineLength == 79 and vim.tbl_contains(settings.lint.select, "E"), "ruff must check flake8's rules")
+  end
+
+  vim.cmd.edit(project .. "/app.py")
+  local app = vim.api.nvim_get_current_buf()
+  assert(vim.wo.colorcolumn == "80", "Python windows need a colorcolumn after flake8's 79 columns")
+  -- autopairs may add the closing bracket, then on its own line.
+  -- <Esc> first: an earlier check may leave insert mode on.
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>Gox = max(<CR>1,<Esc>"), "tx", false)
+  local lines = vim.api.nvim_buf_get_lines(app, 0, -1, false)
+  local open = vim.fn.index(lines, "x = max(") + 1
+  assert(open > 0 and lines[open + 1] == "    1,", "Python brackets must indent one level: " .. vim.inspect(lines))
+  vim.cmd("normal! o)")
+  assert(vim.api.nvim_get_current_line() == ")", "a closing bracket must go back to the opening line's indent")
+
+  lazy.load({ plugins = { "conform.nvim" } })
+  if vim.fn.executable("ruff") == 1 then
+    vim.api.nvim_buf_set_lines(app, 0, -1, false, { "import sys", "import os", "", "print(os, sys)" })
+    require("conform").format({ bufnr = app, async = false, timeout_ms = 10000 })
+    local formatted = vim.api.nvim_buf_get_lines(app, 0, 2, false)
+    assert(formatted[1] == "import os" and formatted[2] == "import sys", "<leader>m must sort Python imports")
+  end
+
+  vim.cmd.enew()
+  assert(vim.wo.colorcolumn == "", "the Python colorcolumn must not follow other buffers")
+  vim.api.nvim_buf_delete(app, { force = true })
+
+  vim.fn.writefile({ "line-length = 100" }, project .. "/ruff.toml")
+  assert(python.ruff_settings(project) == nil, "projects configured for ruff keep their settings")
+  -- Removed on exit: the language servers would report their deleted root.
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    once = true,
+    callback = function()
+      vim.fn.delete(project, "rf")
+    end,
+  })
+end
 assert(vim.lsp.config.basedpyright ~= nil, "basedpyright is not configured")
 assert(vim.diagnostic.config().severity_sort == true, "diagnostics are not configured")
 assert(vim.fn.exists(":CBear") == 2, ":CBear is missing")

@@ -148,14 +148,15 @@ return {
       })
 
       -- Where flake8 lints (42 projects), ruff only formats and organizes
-      -- imports: its diagnostics would repeat flake8's.
+      -- imports; without flake8, ruff checks flake8's rules (python.lua).
       vim.lsp.config("ruff", {
         before_init = function(init_params, config)
-          if python.linter(config.root_dir, config.root_dir) == "flake8" then
+          local settings = python.ruff_settings(config.root_dir)
+          if settings then
             init_params.initializationOptions = vim.tbl_deep_extend(
               "force",
               init_params.initializationOptions or {},
-              { settings = { lint = { enable = false } } }
+              { settings = settings }
             )
           end
         end,
